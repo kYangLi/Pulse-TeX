@@ -215,6 +215,27 @@ async def synctex_forward(project_id: int, request: SyncTeXRequest):
     return SyncTeXResponse()
 
 
+@router.get("/{project_id}/synctex", response_model=SyncTeXResponse)
+async def synctex_forward_get(project_id: int, line: int, file: str = "main.tex"):
+    db = get_database()
+    project = db.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    synctex_path = Path(Config.PROJECTS_DIR) / str(project_id) / "output.synctex.gz"
+    if not synctex_path.exists():
+        raise HTTPException(status_code=404, detail="SyncTeX file not found. Compile the project first.")
+
+    parser = SyncTeXParser(synctex_path)
+    if not parser.is_valid:
+        raise HTTPException(status_code=500, detail="Failed to parse SyncTeX file")
+
+    result = parser.get_position_for_line(file, line)
+    if result:
+        return SyncTeXResponse(page=result[0], x=result[1], y=result[2])
+    return SyncTeXResponse()
+
+
 @router.post("/{project_id}/synctex/reverse", response_model=ReverseSyncTeXResponse)
 async def synctex_reverse(project_id: int, request: ReverseSyncTeXRequest):
     db = get_database()
