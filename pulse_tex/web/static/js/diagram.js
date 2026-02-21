@@ -425,6 +425,18 @@ function hideLoading() {
     document.getElementById('loading-overlay').classList.remove('visible');
 }
 
+function addChatMessage(content, type = 'user') {
+    const chat = document.getElementById('ai-chat');
+    const welcome = chat.querySelector('.ai-welcome');
+    if (welcome) welcome.remove();
+    
+    const msg = document.createElement('div');
+    msg.className = `ai-message ${type}`;
+    msg.textContent = content;
+    chat.appendChild(msg);
+    chat.scrollTop = chat.scrollHeight;
+}
+
 async function refineSketch() {
     const input = document.getElementById('ai-input');
     const description = input.value.trim();
