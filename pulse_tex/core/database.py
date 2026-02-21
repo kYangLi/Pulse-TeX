@@ -85,7 +85,7 @@ class Database:
             session.refresh(project)
             return project
 
-    def get_project(self, project_id: int) -> Project | None:
+    def get_project(self, project_id: str) -> Project | None:
         with self.get_session() as session:
             return session.query(Project).filter_by(id=project_id).first()
 
@@ -93,7 +93,7 @@ class Database:
         with self.get_session() as session:
             return session.query(Project).order_by(Project.updated_at.desc()).all()
 
-    def update_project(self, project_id: int, **kwargs) -> bool:
+    def update_project(self, project_id: str, **kwargs) -> bool:
         with self.get_session() as session:
             project = session.query(Project).filter_by(id=project_id).first()
             if project:
@@ -104,7 +104,7 @@ class Database:
                 return True
             return False
 
-    def delete_project(self, project_id: int) -> bool:
+    def delete_project(self, project_id: str) -> bool:
         with self.get_session() as session:
             project = session.query(Project).filter_by(id=project_id).first()
             if project:
@@ -114,15 +114,15 @@ class Database:
                 return True
             return False
 
-    def get_file(self, project_id: int, path: str) -> ProjectFile | None:
+    def get_file(self, project_id: str, path: str) -> ProjectFile | None:
         with self.get_session() as session:
             return session.query(ProjectFile).filter_by(project_id=project_id, path=path).first()
 
-    def get_files(self, project_id: int) -> list[ProjectFile]:
+    def get_files(self, project_id: str) -> list[ProjectFile]:
         with self.get_session() as session:
             return session.query(ProjectFile).filter_by(project_id=project_id).all()
 
-    def create_file(self, project_id: int, path: str, content: str = "") -> ProjectFile:
+    def create_file(self, project_id: str, path: str, content: str = "") -> ProjectFile:
         with self.get_session() as session:
             file = ProjectFile(project_id=project_id, path=path, content=content)
             session.add(file)
@@ -130,7 +130,7 @@ class Database:
             session.refresh(file)
             return file
 
-    def update_file(self, project_id: int, path: str, content: str) -> bool:
+    def update_file(self, project_id: str, path: str, content: str) -> bool:
         with self.get_session() as session:
             file = session.query(ProjectFile).filter_by(project_id=project_id, path=path).first()
             if file:
@@ -140,7 +140,7 @@ class Database:
                 return True
             return False
 
-    def delete_file(self, project_id: int, path: str) -> bool:
+    def delete_file(self, project_id: str, path: str) -> bool:
         with self.get_session() as session:
             file = session.query(ProjectFile).filter_by(project_id=project_id, path=path).first()
             if file:

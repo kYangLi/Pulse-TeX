@@ -16,7 +16,7 @@ class UpdateFileRequest(BaseModel):
 
 
 @router.get("/{project_id}")
-async def list_files(project_id: int):
+async def list_files(project_id: str):
     db = get_database()
     project = db.get_project(project_id)
     if not project:
@@ -27,7 +27,7 @@ async def list_files(project_id: int):
 
 
 @router.post("/{project_id}")
-async def create_file(project_id: int, data: CreateFileRequest):
+async def create_file(project_id: str, data: CreateFileRequest):
     db = get_database()
     project = db.get_project(project_id)
     if not project:
@@ -42,7 +42,7 @@ async def create_file(project_id: int, data: CreateFileRequest):
 
 
 @router.get("/{project_id}/{path:path}")
-async def get_file(project_id: int, path: str):
+async def get_file(project_id: str, path: str):
     db = get_database()
     file = db.get_file(project_id, path)
     if not file:
@@ -51,7 +51,7 @@ async def get_file(project_id: int, path: str):
 
 
 @router.patch("/{project_id}/{path:path}")
-async def update_file(project_id: int, path: str, data: UpdateFileRequest):
+async def update_file(project_id: str, path: str, data: UpdateFileRequest):
     db = get_database()
     success = db.update_file(project_id, path, data.content)
     if not success:
@@ -62,7 +62,7 @@ async def update_file(project_id: int, path: str, data: UpdateFileRequest):
 
 
 @router.delete("/{project_id}/{path:path}")
-async def delete_file(project_id: int, path: str):
+async def delete_file(project_id: str, path: str):
     db = get_database()
     success = db.delete_file(project_id, path)
     if not success:

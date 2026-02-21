@@ -6,6 +6,29 @@ __pycache__/
 # C extensions
 *.so
 
+# Database files - may contain sensitive data
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# Log files
+*.log
+web.log
+
+# Lock files
+.pulse_tex.lock
+
+# Project outputs (generated files)
+projects/
+output.pdf
+output.synctex.gz
+
+# Test data
+test_debug.db
+tests/data/
+tests/projects/
+
 # Distribution / packaging
 .Python
 build/

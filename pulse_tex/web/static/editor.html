@@ -132,6 +132,16 @@
         .compile-status.success { background: rgba(63,185,80,0.15); color: var(--accent-success); }
         .compile-status.error { background: rgba(248,81,73,0.15); color: var(--accent-danger); }
         .compile-status.loading { background: rgba(210,153,34,0.15); color: var(--accent-warning); }
+        .save-status {
+            font-size: var(--text-xs);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            transition: opacity var(--transition-fast);
+        }
+        .save-status.saved { color: var(--accent-success); }
+        .save-status.unsaved { color: var(--accent-warning); }
+        .save-status.saving { color: var(--text-muted); }
+        .save-status.error { color: var(--accent-danger); }
         .editor-main {
             display: flex;
             flex: 1;
@@ -474,10 +484,144 @@
             background: var(--bg-elevated);
             color: var(--text-primary);
             align-self: flex-start;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
         .ai-message.error {
             background: rgba(248,81,73,0.15);
             color: var(--accent-danger);
+        }
+        .ai-insert-btn {
+            display: inline-block;
+            margin-top: var(--space-2);
+            padding: var(--space-1) var(--space-2);
+            font-size: var(--text-xs);
+            background: var(--accent-primary);
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: opacity var(--transition-fast);
+        }
+        .ai-insert-btn:hover {
+            opacity: 0.9;
+        }
+        .ai-code-block {
+            background: var(--bg-base);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            padding: var(--space-2);
+            margin: var(--space-2) 0;
+            overflow-x: auto;
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            white-space: pre;
+        }
+        .ai-inline-code {
+            background: var(--bg-base);
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+        }
+        .ai-diff-container {
+            margin-top: var(--space-2);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            overflow: hidden;
+        }
+        .ai-diff-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-2) var(--space-3);
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-default);
+            font-size: var(--text-xs);
+            font-weight: 500;
+        }
+        .ai-diff-actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+        .ai-diff-actions button {
+            padding: var(--space-1) var(--space-2);
+            font-size: var(--text-xs);
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .ai-diff-accept {
+            background: var(--accent-success);
+            color: #fff;
+        }
+        .ai-diff-accept:hover { opacity: 0.9; }
+        .ai-diff-reject {
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-default);
+        }
+        .ai-diff-reject:hover { background: var(--bg-surface); }
+        .ai-diff-content {
+            max-height: 300px;
+            overflow: auto;
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            line-height: 1.6;
+        }
+        .ai-diff-line {
+            padding: 2px var(--space-2);
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .ai-diff-line.removed {
+            background: rgba(248,81,73,0.15);
+            color: var(--accent-danger);
+            text-decoration: line-through;
+        }
+        .ai-diff-line.added {
+            background: rgba(63,185,80,0.15);
+            color: var(--accent-success);
+        }
+        .ai-diff-line.unchanged {
+            color: var(--text-muted);
+        }
+        .ai-quick-actions {
+            display: flex;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-default);
+            flex-wrap: wrap;
+        }
+        .ai-quick-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-1) var(--space-2);
+            font-size: var(--text-xs);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .ai-quick-btn:hover {
+            border-color: var(--accent-ai);
+            color: var(--accent-ai);
+        }
+        .ai-quick-btn svg {
+            width: 12px;
+            height: 12px;
+        }
+        .typing-indicator {
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
         }
         .ai-input-area {
             padding: var(--space-3);
@@ -731,6 +875,18 @@
         .error-log .warning-line {
             color: var(--accent-warning);
         }
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--border-default);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -790,8 +946,24 @@
                 </button>
             </div>
             <div class="editor-navbar-right">
+                <button class="btn btn-primary" onclick="saveCurrentFile()" id="save-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H10v3l-7 3 9.5 6h7"/>
+                        <path d="M23 4v6h-4"/>
+                    </svg>
+                    <span data-i18n="editor.save">Save</span>
+                </button>
+                <span class="save-status" id="save-status"></span>
                 <span class="compile-status" id="compile-status"></span>
-                <button class="icon-btn" onclick="openSettingsFromEditor()">
+                <button class="icon-btn lang-btn" onclick="toggleLanguage()" title="Switch Language" id="lang-btn">
+                    <span class="lang-label" id="lang-label">EN</span>
+                </button>
+                <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme" id="theme-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="theme-icon">
+                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+                    </svg>
+                </button>
+                <button class="icon-btn" onclick="openSettingsFromEditor()" title="Settings">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="3"/>
                         <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
@@ -887,9 +1059,27 @@
             <div class="panel-body" style="padding:0;display:flex;flex-direction:column">
                 <div class="ai-tabs">
                     <button class="ai-tab active" data-mode="chat" onclick="setAIMode('chat')" data-i18n="ai.modes.chat">Chat</button>
+                    <button class="ai-tab" data-mode="generate" onclick="setAIMode('generate')" data-i18n="ai.modes.generate">Generate</button>
                     <button class="ai-tab" data-mode="polish" onclick="setAIMode('polish')" data-i18n="ai.modes.polish">Polish</button>
                     <button class="ai-tab" data-mode="translate" onclick="setAIMode('translate')" data-i18n="ai.modes.translate">Translate</button>
-                    <button class="ai-tab" data-mode="tikz" onclick="setAIMode('tikz')" data-i18n="ai.modes.tikz">TikZ</button>
+                </div>
+                <div class="ai-quick-actions">
+                    <button class="ai-quick-btn" onclick="aiPolishSelection()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        <span data-i18n="ai.quickActions.polishSelection">Polish</span>
+                    </button>
+                    <button class="ai-quick-btn" onclick="aiRewriteSelection()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                        <span data-i18n="ai.quickActions.rewrite">Rewrite</span>
+                    </button>
+                    <button class="ai-quick-btn" onclick="aiTranslateSelection()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                        <span data-i18n="ai.quickActions.translate">Translate</span>
+                    </button>
+                    <button class="ai-quick-btn" onclick="aiPolishAll()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                        <span data-i18n="ai.quickActions.polishAll">Polish All</span>
+                    </button>
                 </div>
                 <div class="ai-chat" id="ai-chat"></div>
                 <div class="ai-input-area">
@@ -1048,6 +1238,79 @@
                 <span data-i18n="ai.contextMenu.explain">Explain</span>
             </div>
         </div>
+
+        <div class="modal-overlay" id="settings-modal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3 class="modal-title" data-i18n="settings.title">Settings</h3>
+                    <button class="icon-btn" onclick="closeModal('settings-modal')">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="tabs">
+                        <button class="tab active" data-tab="general" onclick="switchTab('general')" data-i18n="settings.tabs.general">General</button>
+                        <button class="tab" data-tab="ai" onclick="switchTab('ai')" data-i18n="settings.tabs.ai">AI Service</button>
+                        <button class="tab" data-tab="latex" onclick="switchTab('latex')" data-i18n="settings.tabs.latex">LaTeX</button>
+                    </div>
+                    <div id="tab-general" class="tab-content">
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="settings.general.language">Language</label>
+                            <select class="select w-full" id="setting-language" onchange="changeLanguage(this.value)">
+                                <option value="en">English</option>
+                                <option value="zh">中文</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="settings.general.theme">Theme</label>
+                            <select class="select w-full" id="setting-theme" onchange="changeTheme(this.value)">
+                                <option value="dark" data-i18n="settings.general.themes.dark">Dark</option>
+                                <option value="light" data-i18n="settings.general.themes.light">Light</option>
+                                <option value="system" data-i18n="settings.general.themes.system">System</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="tab-ai" class="tab-content" style="display:none">
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="settings.ai.apiUrl">API URL</label>
+                            <input type="text" class="input" id="setting-ai-url" placeholder="https://api.openai.com/v1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="settings.ai.apiKey">API Key</label>
+                            <input type="password" class="input" id="setting-ai-key" placeholder="sk-...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="settings.ai.model">Model</label>
+                            <input type="text" class="input" id="setting-ai-model" placeholder="gpt-4">
+                        </div>
+                    </div>
+                    <div id="tab-latex" class="tab-content" style="display:none">
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="settings.latex.engine">LaTeX Engine</label>
+                            <select class="select w-full" id="setting-latex-engine">
+                                <option value="tectonic">Tectonic</option>
+                                <option value="pdflatex">pdfLaTeX</option>
+                                <option value="xelatex">XeLaTeX</option>
+                                <option value="lualatex">LuaLaTeX</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="settings.latex.bibtexEngine">BibTeX Engine</label>
+                            <select class="select w-full" id="setting-bibtex-engine">
+                                <option value="biber">Biber</option>
+                                <option value="bibtex">BibTeX</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-ghost" onclick="closeModal('settings-modal')" data-i18n="settings.cancel">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveSettings()" data-i18n="settings.save">Save</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="/js/i18n.js"></script>
@@ -1062,6 +1325,10 @@
         let zoom = 1;
         let openPanel = null;
         let aiMode = 'chat';
+        let autoSaveTimer = null;
+        let hasUnsavedChanges = false;
+        let lastSaveTime = null;
+        const AUTO_SAVE_INTERVAL = 5 * 60 * 1000;
 
         document.addEventListener('DOMContentLoaded', async function() {
             await initI18n();
@@ -1073,11 +1340,66 @@
             
             pdfjsLib.GlobalWorkerOptions.workerSrc = '/libs/pdfjs/pdf.worker.min.js';
             
-            await loadProject();
             initMonaco();
             initDiagramCanvas();
             loadSettings();
+            initAutoSave();
         });
+
+        function initAutoSave() {
+            window.addEventListener('beforeunload', (e) => {
+                if (hasUnsavedChanges) {
+                    const timeStr = lastSaveTime ? formatTimeAgo(lastSaveTime) : 'never';
+                    const msg = `${t('editor.unsavedChanges') || 'You have unsaved changes'}\n${t('editor.lastSaved') || 'Last saved'}: ${timeStr}\n\n${t('editor.confirmExit') || 'Are you sure you want to leave?'}`;
+                    e.preventDefault();
+                    e.returnValue = msg;
+                    return msg;
+                }
+            });
+            
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                    e.preventDefault();
+                    saveCurrentFile();
+                }
+            });
+            
+            setInterval(() => {
+                if (hasUnsavedChanges && editor && currentFile) {
+                    saveCurrentFile();
+                }
+            }, AUTO_SAVE_INTERVAL);
+        }
+
+        function markUnsaved() {
+            hasUnsavedChanges = true;
+            updateSaveStatus('unsaved');
+        }
+        
+        function formatTimeAgo(date) {
+            const now = new Date();
+            const diff = Math.floor((now - date) / 1000);
+            
+            if (diff < 60) return t('common.justNow') || 'Just now';
+            if (diff < 3600) return `${Math.floor(diff / 60)} ${t('common.minutesAgo') || 'min ago'}`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)} ${t('common.hoursAgo') || 'hours ago'}`;
+            return date.toLocaleTimeString();
+        }
+
+        function updateSaveStatus(status) {
+            const statusEl = document.getElementById('save-status');
+            if (!statusEl) return;
+            
+            const labels = {
+                'saved': t('editor.saved') || 'Saved',
+                'unsaved': t('editor.unsaved') || 'Unsaved',
+                'saving': t('editor.saving') || 'Saving...',
+                'error': t('editor.saveError') || 'Save failed'
+            };
+            
+            statusEl.textContent = labels[status] || '';
+            statusEl.className = 'save-status ' + status;
+        }
 
         async function loadProject() {
             try {
@@ -1165,9 +1487,7 @@
                 
                 editor.onDidChangeModelContent(() => {
                     if (currentFile) {
-                        const projectNameEl = document.getElementById('project-name');
-                        const baseName = projectNameEl.textContent.replace(' *', '');
-                        projectNameEl.textContent = baseName + ' *';
+                        markUnsaved();
                     }
                 });
                 
@@ -1178,6 +1498,8 @@
                 });
                 
                 loadProject();
+                lastSaveTime = new Date();
+                updateSaveStatus('saved');
             });
         }
 
@@ -1185,18 +1507,31 @@
             if (!editor || !currentFile) return;
             
             const content = editor.getValue();
+            const btn = document.getElementById('save-btn');
+            if (btn) btn.disabled = true;
+            updateSaveStatus('saving');
             
             try {
-                await fetch(`/api/files/${projectId}/${encodeURIComponent(currentFile)}`, {
+                const res = await fetch(`/api/files/${projectId}/${encodeURIComponent(currentFile)}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ content })
                 });
-                const projectNameEl = document.getElementById('project-name');
-                const baseName = projectNameEl.textContent.replace(' *', '');
-                projectNameEl.textContent = baseName;
+                
+                if (res.ok) {
+                    hasUnsavedChanges = false;
+                    lastSaveTime = new Date();
+                    updateSaveStatus('saved');
+                } else {
+                    const err = await res.text();
+                    console.error('Save failed:', err);
+                    updateSaveStatus('error');
+                }
             } catch (e) {
                 console.error('Failed to save file:', e);
+                updateSaveStatus('error');
+            } finally {
+                if (btn) btn.disabled = false;
             }
         }
 
@@ -1266,7 +1601,69 @@
             const panel = document.getElementById('error-panel');
             const logEl = document.getElementById('error-log');
             logEl.textContent = log || '';
+            
+            let explainBtn = document.getElementById('explain-error-btn');
+            if (!explainBtn) {
+                const header = panel.querySelector('.error-header');
+                explainBtn = document.createElement('button');
+                explainBtn.id = 'explain-error-btn';
+                explainBtn.className = 'btn btn-secondary btn-sm';
+                explainBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2z"/></svg><span data-i18n="editor.explainError">Explain</span>`;
+                explainBtn.onclick = explainErrorWithAI;
+                header.insertBefore(explainBtn, header.querySelector('.icon-btn'));
+            }
+            
             panel.classList.add('visible');
+        }
+
+        async function explainErrorWithAI() {
+            const logEl = document.getElementById('error-log');
+            const log = logEl.textContent;
+            const sourceCode = editor?.getValue() || '';
+            
+            const explainBtn = document.getElementById('explain-error-btn');
+            explainBtn.disabled = true;
+            explainBtn.innerHTML = '<span class="spinner"></span>';
+            
+            togglePanel('ai');
+            const chat = document.getElementById('ai-chat');
+            chat.innerHTML = `<div class="ai-message user">${t('editor.askingAI') || 'Asking AI to explain the error...'}</div>`;
+            
+            const assistantMsg = document.createElement('div');
+            assistantMsg.className = 'ai-message assistant';
+            assistantMsg.innerHTML = '<span class="typing-indicator">...</span>';
+            chat.appendChild(assistantMsg);
+            
+            try {
+                const res = await fetch('/api/ai/explain-error', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        log_content: log,
+                        source_code: sourceCode
+                    })
+                });
+                const data = await res.json();
+                
+                if (data.success && data.content) {
+                    assistantMsg.innerHTML = formatAIContent(data.content);
+                    const insertBtn = document.createElement('button');
+                    insertBtn.className = 'ai-insert-btn';
+                    insertBtn.textContent = t('ai.copy') || 'Copy';
+                    insertBtn.onclick = () => { navigator.clipboard.writeText(data.content); insertBtn.textContent = t('ai.copied') || 'Copied!'; };
+                    assistantMsg.appendChild(insertBtn);
+                } else {
+                    assistantMsg.className = 'ai-message error';
+                    assistantMsg.textContent = data.error || 'Failed to explain error';
+                }
+            } catch (e) {
+                assistantMsg.className = 'ai-message error';
+                assistantMsg.textContent = e.message;
+            }
+            
+            chat.scrollTop = chat.scrollHeight;
+            explainBtn.disabled = false;
+            explainBtn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px"><path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2z"/></svg><span data-i18n="editor.explainError">Explain</span>`;
         }
 
         function toggleErrorPanel() {
@@ -1380,29 +1777,288 @@
             
             if (!message) return;
             
-            chat.innerHTML += `<div class="ai-message user">${escapeHtml(message)}</div>`;
+            chat.innerHTML += `<div class="ai-message user">${escapeHtml(message).replace(/\n/g, '<br>')}</div>`;
             input.value = '';
             chat.scrollTop = chat.scrollHeight;
             
+            const assistantMsg = document.createElement('div');
+            assistantMsg.className = 'ai-message assistant';
+            assistantMsg.innerHTML = '<span class="typing-indicator">...</span>';
+            chat.appendChild(assistantMsg);
+            chat.scrollTop = chat.scrollHeight;
+            
+            let systemPrompt = null;
+            if (aiMode === 'generate') {
+                systemPrompt = `You are a LaTeX expert. Generate LaTeX code based on the user's request.
+Rules:
+- Return ONLY valid LaTeX code that can be directly inserted into a document
+- Do NOT include \\documentclass, \\begin{document}, or \\end{document}
+- Use standard packages (assume they are already imported)
+- Keep the code clean and well-formatted
+- Add brief comments if helpful`;
+            }
+            
             try {
-                const res = await fetch('/api/ai/chat', {
+                const res = await fetch('/api/ai/chat/stream', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         message: message,
-                        context: editor?.getValue() || ''
+                        context: editor?.getValue() || '',
+                        system_prompt: systemPrompt
                     })
                 });
-                const data = await res.json();
                 
-                if (data.success && data.content) {
-                    chat.innerHTML += `<div class="ai-message assistant">${escapeHtml(data.content)}</div>`;
-                } else if (data.error) {
-                    chat.innerHTML += `<div class="ai-message error">${escapeHtml(data.error)}</div>`;
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let fullContent = '';
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') continue;
+                            
+                            try {
+                                const parsed = JSON.parse(data);
+                                if (parsed.content) {
+                                    fullContent += parsed.content;
+                                    assistantMsg.innerHTML = formatAIContent(fullContent);
+                                    chat.scrollTop = chat.scrollHeight;
+                                } else if (parsed.error) {
+                                    assistantMsg.className = 'ai-message error';
+                                    assistantMsg.textContent = parsed.error;
+                                }
+                            } catch {}
+                        }
+                    }
+                }
+                
+                if (fullContent) {
+                    const insertBtn = document.createElement('button');
+                    insertBtn.className = 'ai-insert-btn';
+                    insertBtn.textContent = t('ai.insertToEditor') || 'Insert to Editor';
+                    insertBtn.onclick = () => insertAIToEditor(fullContent);
+                    assistantMsg.appendChild(insertBtn);
+                    
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'ai-insert-btn';
+                    copyBtn.textContent = t('ai.copy') || 'Copy';
+                    copyBtn.style.marginLeft = '8px';
+                    copyBtn.onclick = () => { navigator.clipboard.writeText(fullContent); copyBtn.textContent = t('ai.copied') || 'Copied!'; };
+                    assistantMsg.appendChild(copyBtn);
                 }
             } catch (e) {
-                chat.innerHTML += `<div class="ai-message error">${escapeHtml(e.message)}</div>`;
+                assistantMsg.className = 'ai-message error';
+                assistantMsg.textContent = e.message;
             }
+            chat.scrollTop = chat.scrollHeight;
+        }
+        
+        function formatAIContent(content) {
+            let html = escapeHtml(content).replace(/\n/g, '<br>');
+            html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre class="ai-code-block"><code>$2</code></pre>');
+            html = html.replace(/`([^`]+)`/g, '<code class="ai-inline-code">$1</code>');
+            html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+            return html;
+        }
+        
+        function insertAIToEditor(content) {
+            if (!editor) return;
+            const position = editor.getPosition();
+            editor.executeEdits('', [{
+                range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+                text: content
+            }]);
+            editor.focus();
+        }
+        
+        let pendingDiff = null;
+        
+        async function aiPolishSelection() {
+            const selection = editor?.getModel().getValueInRange(editor.getSelection());
+            if (!selection) {
+                alert(t('ai.noSelection') || 'Please select some text first');
+                return;
+            }
+            await aiModifyText(selection, 'polish', editor.getSelection());
+        }
+        
+        async function aiRewriteSelection() {
+            const selection = editor?.getModel().getValueInRange(editor.getSelection());
+            if (!selection) {
+                alert(t('ai.noSelection') || 'Please select some text first');
+                return;
+            }
+            await aiModifyText(selection, 'rewrite', editor.getSelection());
+        }
+        
+        async function aiTranslateSelection() {
+            const selection = editor?.getModel().getValueInRange(editor.getSelection());
+            if (!selection) {
+                alert(t('ai.noSelection') || 'Please select some text first');
+                return;
+            }
+            await aiModifyText(selection, 'translate', editor.getSelection());
+        }
+        
+        async function aiPolishAll() {
+            const allText = editor?.getValue();
+            if (!allText) return;
+            const fullRange = editor.getModel().getFullModelRange();
+            await aiModifyText(allText, 'polish', fullRange);
+        }
+        
+        async function aiModifyText(originalText, action, range) {
+            const chat = document.getElementById('ai-chat');
+            const assistantMsg = document.createElement('div');
+            assistantMsg.className = 'ai-message assistant';
+            assistantMsg.innerHTML = '<span class="typing-indicator">...</span>';
+            chat.appendChild(assistantMsg);
+            chat.scrollTop = chat.scrollHeight;
+            
+            const actionLabels = {
+                'polish': t('ai.actions.polishing') || 'Polishing...',
+                'rewrite': t('ai.actions.rewriting') || 'Rewriting...',
+                'translate': t('ai.actions.translating') || 'Translating...'
+            };
+            
+            const systemPrompts = {
+                'polish': `You are an academic writing assistant. Polish the given LaTeX text.
+Rules:
+- Improve clarity, grammar, and academic style
+- Preserve ALL LaTeX commands, environments, and mathematical notation exactly
+- Return ONLY the polished text, no explanations
+- Maintain the same structure and length approximately`,
+                'rewrite': `You are an academic writing assistant. Rewrite the given LaTeX text to be clearer and more impactful.
+Rules:
+- Improve flow and readability
+- Preserve ALL LaTeX commands, environments, and mathematical notation exactly
+- Return ONLY the rewritten text, no explanations`,
+                'translate': `You are a professional academic translator. Translate the given LaTeX text.
+Rules:
+- Translate to English if the text is in Chinese, or to Chinese if in English
+- Preserve ALL LaTeX commands, environments, and mathematical notation exactly
+- Return ONLY the translated text, no explanations`
+            };
+            
+            try {
+                const res = await fetch('/api/ai/chat/stream', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: originalText,
+                        context: '',
+                        system_prompt: systemPrompts[action]
+                    })
+                });
+                
+                const reader = res.body.getReader();
+                const decoder = new TextDecoder();
+                let fullContent = '';
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+                    
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const data = line.slice(6);
+                            if (data === '[DONE]') continue;
+                            try {
+                                const parsed = JSON.parse(data);
+                                if (parsed.content) {
+                                    fullContent += parsed.content;
+                                }
+                            } catch {}
+                        }
+                    }
+                }
+                
+                if (fullContent) {
+                    pendingDiff = { original: originalText, modified: fullContent, range: range };
+                    showDiffView(assistantMsg, originalText, fullContent);
+                }
+            } catch (e) {
+                assistantMsg.className = 'ai-message error';
+                assistantMsg.textContent = e.message;
+            }
+            chat.scrollTop = chat.scrollHeight;
+        }
+        
+        function showDiffView(container, original, modified) {
+            const diffHtml = computeDiffHtml(original, modified);
+            
+            container.innerHTML = `
+                <div class="ai-diff-container">
+                    <div class="ai-diff-header">
+                        <span>${t('ai.diff.title') || 'Changes Preview'}</span>
+                        <div class="ai-diff-actions">
+                            <button class="ai-diff-accept" onclick="acceptDiff()">${t('ai.diff.accept') || 'Accept'}</button>
+                            <button class="ai-diff-reject" onclick="rejectDiff()">${t('ai.diff.reject') || 'Reject'}</button>
+                        </div>
+                    </div>
+                    <div class="ai-diff-content">${diffHtml}</div>
+                </div>
+            `;
+        }
+        
+        function computeDiffHtml(original, modified) {
+            const origLines = original.split('\n');
+            const modLines = modified.split('\n');
+            
+            let html = '';
+            const maxLen = Math.max(origLines.length, modLines.length);
+            
+            for (let i = 0; i < maxLen; i++) {
+                const origLine = origLines[i] || '';
+                const modLine = modLines[i] || '';
+                
+                if (origLine === modLine) {
+                    html += `<div class="ai-diff-line unchanged">${escapeHtml(origLine) || ' '}</div>`;
+                } else {
+                    if (origLine) {
+                        html += `<div class="ai-diff-line removed">- ${escapeHtml(origLine)}</div>`;
+                    }
+                    if (modLine) {
+                        html += `<div class="ai-diff-line added">+ ${escapeHtml(modLine)}</div>`;
+                    }
+                }
+            }
+            
+            return html || `<div class="ai-diff-line added">+ ${escapeHtml(modified)}</div>`;
+        }
+        
+        function acceptDiff() {
+            if (!pendingDiff || !editor) return;
+            
+            editor.executeEdits('', [{
+                range: pendingDiff.range,
+                text: pendingDiff.modified
+            }]);
+            
+            const chat = document.getElementById('ai-chat');
+            chat.innerHTML += `<div class="ai-message assistant" style="color:var(--accent-success)">${t('ai.diff.accepted') || 'Changes applied!'}</div>`;
+            chat.scrollTop = chat.scrollHeight;
+            
+            pendingDiff = null;
+            editor.focus();
+        }
+        
+        function rejectDiff() {
+            pendingDiff = null;
+            const chat = document.getElementById('ai-chat');
+            chat.innerHTML += `<div class="ai-message assistant" style="color:var(--text-muted)">${t('ai.diff.rejected') || 'Changes discarded'}</div>`;
             chat.scrollTop = chat.scrollHeight;
         }
 
@@ -1689,16 +2345,127 @@
         }
 
         function openSettingsFromEditor() {
-            window.open('/', '_blank');
+            loadSettings();
+            document.getElementById('settings-modal').classList.add('visible');
         }
-
+        
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('visible');
+        }
+        
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+            document.getElementById(`tab-${tab}`).style.display = 'block';
+        }
+        
         async function loadSettings() {
             try {
                 const res = await fetch('/api/config');
                 const config = await res.json();
-                if (config.language) setLanguage(config.language);
-                if (config.theme) setTheme(config.theme);
-            } catch (e) {}
+                
+                const langSelect = document.getElementById('setting-language');
+                const themeSelect = document.getElementById('setting-theme');
+                if (langSelect) langSelect.value = config.ui_language || 'en';
+                if (themeSelect) themeSelect.value = config.theme || 'dark';
+                
+                document.getElementById('setting-ai-url').value = config.ai_base_url || '';
+                document.getElementById('setting-ai-key').value = config.ai_api_key || '';
+                document.getElementById('setting-ai-model').value = config.ai_model || '';
+                document.getElementById('setting-latex-engine').value = config.latex_engine || 'tectonic';
+                document.getElementById('setting-bibtex-engine').value = config.bibtex_engine || 'biber';
+            } catch (e) {
+                console.error('Failed to load settings:', e);
+            }
+        }
+        
+        async function saveSettings() {
+            const config = {
+                ui_language: document.getElementById('setting-language').value,
+                theme: document.getElementById('setting-theme').value,
+                ai_base_url: document.getElementById('setting-ai-url').value,
+                ai_api_key: document.getElementById('setting-ai-key').value,
+                ai_model: document.getElementById('setting-ai-model').value,
+                latex_engine: document.getElementById('setting-latex-engine').value,
+                bibtex_engine: document.getElementById('setting-bibtex-engine').value
+            };
+            
+            try {
+                await fetch('/api/config', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                
+                setLanguage(config.ui_language);
+                setTheme(config.theme);
+                updateLangLabel();
+                updateThemeIcon();
+                closeModal('settings-modal');
+            } catch (e) {
+                alert(t('common.error') || 'Error saving settings');
+            }
+        }
+        
+        function changeLanguage(lang) {
+            setLanguage(lang);
+        }
+        
+        function changeTheme(theme) {
+            setTheme(theme);
+            updateThemeIcon();
+        }
+
+        function toggleLanguage() {
+            const current = getCurrentLanguage();
+            const next = current === 'en' ? 'zh' : 'en';
+            setLanguage(next);
+            saveLanguageAndTheme(next, null);
+            updateLangLabel();
+        }
+
+        function updateLangLabel() {
+            const label = document.getElementById('lang-label');
+            if (label) {
+                label.textContent = getCurrentLanguage() === 'zh' ? '中' : 'EN';
+            }
+        }
+
+        function toggleTheme() {
+            const current = getCurrentTheme();
+            const next = current === 'dark' ? 'light' : 'dark';
+            setTheme(next);
+            saveLanguageAndTheme(null, next);
+            updateThemeIcon();
+        }
+        
+        async function saveLanguageAndTheme(lang, theme) {
+            const config = {};
+            if (lang) config.ui_language = lang;
+            if (theme) config.theme = theme;
+            
+            try {
+                await fetch('/api/config', {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+            } catch (e) {
+                console.error('Failed to save settings:', e);
+            }
+        }
+
+        function updateThemeIcon() {
+            const theme = getCurrentTheme();
+            const icon = document.getElementById('theme-icon');
+            if (icon) {
+                if (theme === 'dark') {
+                    icon.innerHTML = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+                } else {
+                    icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+                }
+            }
         }
 
         document.addEventListener('keydown', e => {

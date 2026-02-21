@@ -14,8 +14,11 @@
     "readyToWrite": "Ready to write your next paper?",
     "recentProjects": "Recent Projects",
     "newProject": "New Project",
+    "newProjectName": "Project name:",
     "noProjects": "No projects yet",
     "createFirst": "Create your first project",
+    "createFirstDesc": "Start writing your first academic paper",
+    "fromTemplate": "From Template",
     "lastEdited": "Last edited",
     "open": "Open",
     "export": "Export",
@@ -44,10 +47,17 @@
     "saved": "Saved",
     "saving": "Saving...",
     "unsaved": "Unsaved changes",
+    "saveError": "Save failed",
     "untitled": "Untitled",
     "downloadPdf": "Download PDF",
     "syncTeX": "SyncTeX",
-    "line": "Line"
+    "line": "Line",
+    "explainError": "Explain",
+    "askingAI": "Asking AI to explain the error...",
+    "compilationLog": "Compilation Log",
+    "unsavedChanges": "You have unsaved changes",
+    "lastSaved": "Last saved",
+    "confirmExit": "Are you sure you want to leave?"
   },
   "ai": {
     "title": "AI Assistant",
@@ -58,12 +68,35 @@
     "placeholder": "Ask AI anything...",
     "send": "Send",
     "generating": "Generating...",
+    "insertToEditor": "Insert",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "noSelection": "Please select some text first",
     "modes": {
       "chat": "Chat",
+      "generate": "Generate",
       "polish": "Polish Text",
       "translate": "Translate",
       "tikz": "Generate TikZ",
       "plot": "Generate Plot"
+    },
+    "quickActions": {
+      "polishSelection": "Polish",
+      "rewrite": "Rewrite",
+      "translate": "Translate",
+      "polishAll": "Polish All"
+    },
+    "actions": {
+      "polishing": "Polishing...",
+      "rewriting": "Rewriting...",
+      "translating": "Translating..."
+    },
+    "diff": {
+      "title": "Changes Preview",
+      "accept": "Accept",
+      "reject": "Reject",
+      "accepted": "Changes applied!",
+      "rejected": "Changes discarded"
     },
     "contextMenu": {
       "polish": "Polish",

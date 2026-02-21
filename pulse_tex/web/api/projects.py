@@ -56,7 +56,7 @@ Your content here.
 
 
 @router.get("/{project_id}")
-async def get_project(project_id: int):
+async def get_project(project_id: str):
     db = get_database()
     project = db.get_project(project_id)
     if not project:
@@ -65,7 +65,7 @@ async def get_project(project_id: int):
 
 
 @router.patch("/{project_id}")
-async def update_project(project_id: int, data: UpdateProjectRequest):
+async def update_project(project_id: str, data: UpdateProjectRequest):
     db = get_database()
     updates = {k: v for k, v in data.model_dump().items() if v is not None}
     if not updates:
@@ -80,7 +80,7 @@ async def update_project(project_id: int, data: UpdateProjectRequest):
 
 
 @router.delete("/{project_id}")
-async def delete_project(project_id: int):
+async def delete_project(project_id: str):
     db = get_database()
     success = db.delete_project(project_id)
     if not success:
@@ -89,7 +89,7 @@ async def delete_project(project_id: int):
 
 
 @router.get("/{project_id}/export")
-async def export_project(project_id: int):
+async def export_project(project_id: str):
     db = get_database()
     project = db.get_project(project_id)
     if not project:

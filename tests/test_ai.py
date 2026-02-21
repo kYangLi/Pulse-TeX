@@ -68,6 +68,28 @@ class TestAIChat:
         assert "Hello" in data["content"]
 
 
+class TestAIChatStream:
+    def test_chat_stream_without_config(self, client):
+        response = client.post("/api/ai/chat/stream", json={"message": "Hello"})
+        assert response.status_code == 503
+
+    def test_chat_stream_with_config(self, client):
+        client.patch("/api/config", json={"ai_api_key": "test-key"})
+
+        async def mock_stream(*args, **kwargs):
+            yield "Hello"
+            yield "!"
+            yield " How"
+            yield " can"
+            yield " I"
+            yield " help?"
+
+        with patch("pulse_tex.services.ai_assistant.AIService.chat_stream", side_effect=mock_stream):
+            response = client.post("/api/ai/chat/stream", json={"message": "Hello"})
+            assert response.status_code == 200
+            assert "text/event-stream" in response.headers["content-type"]
+
+
 class TestAIPolish:
     def test_polish_without_config(self, client):
         response = client.post("/api/ai/polish", json={"text": "test"})

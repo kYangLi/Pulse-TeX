@@ -14,8 +14,11 @@
     "readyToWrite": "准备好写下一篇论文了吗？",
     "recentProjects": "最近项目",
     "newProject": "新建项目",
+    "newProjectName": "项目名称：",
     "noProjects": "暂无项目",
     "createFirst": "创建第一个项目",
+    "createFirstDesc": "开始撰写您的第一篇学术论文",
+    "fromTemplate": "使用模板",
     "lastEdited": "最后编辑",
     "open": "打开",
     "export": "导出",
@@ -44,10 +47,17 @@
     "saved": "已保存",
     "saving": "保存中...",
     "unsaved": "未保存更改",
+    "saveError": "保存失败",
+    "unsavedChanges": "您有未保存的更改。",
+    "lastSaved": "上次保存",
+    "confirmExit": "确定要离开吗？",
     "untitled": "未命名",
     "downloadPdf": "下载 PDF",
     "syncTeX": "SyncTeX 同步",
-    "line": "行"
+    "line": "行",
+    "explainError": "解释",
+    "askingAI": "正在让 AI 解释错误...",
+    "compilationLog": "编译日志"
   },
   "ai": {
     "title": "AI 助手",
@@ -58,12 +68,35 @@
     "placeholder": "向 AI 提问...",
     "send": "发送",
     "generating": "生成中...",
+    "insertToEditor": "插入",
+    "copy": "复制",
+    "copied": "已复制!",
+    "noSelection": "请先选择文本",
     "modes": {
       "chat": "对话",
+      "generate": "生成代码",
       "polish": "润色文本",
       "translate": "翻译",
       "tikz": "生成 TikZ",
       "plot": "生成图表"
+    },
+    "quickActions": {
+      "polishSelection": "润色",
+      "rewrite": "重写",
+      "translate": "翻译",
+      "polishAll": "润色全文"
+    },
+    "actions": {
+      "polishing": "润色中...",
+      "rewriting": "重写中...",
+      "translating": "翻译中..."
+    },
+    "diff": {
+      "title": "修改预览",
+      "accept": "接受",
+      "reject": "拒绝",
+      "accepted": "修改已应用!",
+      "rejected": "修改已放弃"
     },
     "contextMenu": {
       "polish": "润色",

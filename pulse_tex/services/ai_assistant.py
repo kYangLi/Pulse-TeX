@@ -56,6 +56,36 @@ class AIService:
         )
         return response.choices[0].message.content or ""
 
+    async def chat_stream(
+        self,
+        message: str,
+        context: str | None = None,
+        system_prompt: str | None = None,
+    ):
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        if context:
+            messages.append(
+                {
+                    "role": "user",
+                    "content": f"Context (from my paper):\n{context}\n\nMy question: {message}",
+                }
+            )
+        else:
+            messages.append({"role": "user", "content": message})
+
+        stream = await self.client.chat.completions.create(
+            model=self.model,
+            messages=messages,
+            temperature=0.7,
+            stream=True,
+        )
+
+        async for chunk in stream:
+            if chunk.choices and chunk.choices[0].delta.content:
+                yield chunk.choices[0].delta.content
+
     async def polish(self, text: str, style: str = "academic") -> str:
         system_prompt = """You are an academic writing assistant. Your task is to polish and improve the given text while maintaining its original meaning. 
 - Improve clarity, grammar, and flow

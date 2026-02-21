@@ -120,7 +120,7 @@ def _check_aux_for_citations(aux_file: Path) -> bool:
 
 
 @router.post("/{project_id}")
-async def compile_project(project_id: int) -> CompileResult:
+async def compile_project(project_id: str) -> CompileResult:
     db = get_database()
     project = db.get_project(project_id)
     if not project:
@@ -195,7 +195,7 @@ async def compile_project(project_id: int) -> CompileResult:
 
 
 @router.post("/{project_id}/synctex/forward", response_model=SyncTeXResponse)
-async def synctex_forward(project_id: int, request: SyncTeXRequest):
+async def synctex_forward(project_id: str, request: SyncTeXRequest):
     db = get_database()
     project = db.get_project(project_id)
     if not project:
@@ -216,7 +216,7 @@ async def synctex_forward(project_id: int, request: SyncTeXRequest):
 
 
 @router.get("/{project_id}/synctex", response_model=SyncTeXResponse)
-async def synctex_forward_get(project_id: int, line: int, file: str = "main.tex"):
+async def synctex_forward_get(project_id: str, line: int, file: str = "main.tex"):
     db = get_database()
     project = db.get_project(project_id)
     if not project:
@@ -237,7 +237,7 @@ async def synctex_forward_get(project_id: int, line: int, file: str = "main.tex"
 
 
 @router.post("/{project_id}/synctex/reverse", response_model=ReverseSyncTeXResponse)
-async def synctex_reverse(project_id: int, request: ReverseSyncTeXRequest):
+async def synctex_reverse(project_id: str, request: ReverseSyncTeXRequest):
     db = get_database()
     project = db.get_project(project_id)
     if not project:
@@ -256,7 +256,7 @@ async def synctex_reverse(project_id: int, request: ReverseSyncTeXRequest):
 
 
 @router.get("/{project_id}/pdf")
-async def get_pdf(project_id: int):
+async def get_pdf(project_id: str):
     db = get_database()
     project = db.get_project(project_id)
     if not project:

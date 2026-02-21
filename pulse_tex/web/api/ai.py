@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+import json
 
 from pulse_tex.services.ai_assistant import ai_service
 
@@ -56,6 +57,34 @@ async def chat(request: ChatRequest):
         return AIResponse(success=True, content=result)
     except Exception as e:
         return AIResponse(success=False, content="", error=str(e))
+
+
+@router.post("/chat/stream")
+async def chat_stream(request: ChatRequest):
+    if not ai_service.is_configured:
+        raise HTTPException(status_code=503, detail="AI service not configured")
+
+    async def generate():
+        try:
+            async for chunk in ai_service.chat_stream(
+                message=request.message,
+                context=request.context,
+                system_prompt=request.system_prompt,
+            ):
+                yield f"data: {json.dumps({'content': chunk})}\n\n"
+            yield "data: [DONE]\n\n"
+        except Exception as e:
+            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
 
 
 @router.post("/polish", response_model=AIResponse)
