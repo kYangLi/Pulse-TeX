@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulse-TeX Setup</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #e0e0e0;
+        }
+        .setup-container {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+        }
+        .setup-card {
+            background: #1e1e2e;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo h1 {
+            font-size: 32px;
+            background: linear-gradient(135deg, #3498db, #2ecc71);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .logo p {
+            color: #888;
+            font-size: 14px;
+        }
+        .steps {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 32px;
+        }
+        .step {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            background: #2a2a3e;
+            color: #666;
+            transition: all 0.3s;
+        }
+        .step.active {
+            background: #3498db;
+            color: #fff;
+        }
+        .step.done {
+            background: #2ecc71;
+            color: #fff;
+        }
+        .step-line {
+            width: 40px;
+            height: 2px;
+            background: #2a2a3e;
+            align-self: center;
+        }
+        .step-line.done {
+            background: #2ecc71;
+        }
+        .form-section {
+            display: none;
+        }
+        .form-section.active {
+            display: block;
+        }
+        h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: #3498db;
+        }
+        .hint {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 24px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #aaa;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            background: #2a2a3e;
+            border: 1px solid #3a3a4e;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        input::placeholder {
+            color: #666;
+        }
+        select {
+            cursor: pointer;
+        }
+        .engine-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .engine-option {
+            padding: 16px;
+            background: #2a2a3e;
+            border: 2px solid #3a3a4e;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .engine-option:hover {
+            border-color: #3498db;
+        }
+        .engine-option.selected {
+            border-color: #3498db;
+            background: #2a3a4e;
+        }
+        .engine-option.unavailable {
+            opacity: 0.5;
+        }
+        .engine-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .engine-status {
+            font-size: 12px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .engine-status.available {
+            background: #2ecc71;
+            color: #fff;
+        }
+        .engine-status.unavailable {
+            background: #e74c3c;
+            color: #fff;
+        }
+        .engine-desc {
+            font-size: 12px;
+            color: #888;
+        }
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 32px;
+            gap: 12px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-secondary {
+            background: #2a2a3e;
+            color: #aaa;
+        }
+        .btn-secondary:hover {
+            background: #3a3a4e;
+        }
+        .btn-primary {
+            background: #3498db;
+            color: #fff;
+            flex: 1;
+        }
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        .btn-primary:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        .test-result {
+            margin-top: 8px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            display: none;
+        }
+        .test-result.success {
+            display: block;
+            background: #1a4a2e;
+            color: #2ecc71;
+        }
+        .test-result.error {
+            display: block;
+            background: #4a2a2a;
+            color: #e74c3c;
+        }
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .install-hint {
+            background: #3a3a2e;
+            border-left: 3px solid #f39c12;
+            padding: 12px;
+            margin-top: 16px;
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+        }
+        .install-hint code {
+            background: #2a2a3e;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        .install-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .install-modal.visible {
+            display: flex;
+        }
+        .install-modal-content {
+            background: #1e1e2e;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .install-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .install-modal-header h3 {
+            color: #f39c12;
+            font-size: 20px;
+        }
+        .install-modal-close {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .install-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .install-tab {
+            padding: 8px 16px;
+            background: #2a2a3e;
+            border: none;
+            border-radius: 6px;
+            color: #888;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .install-tab.active {
+            background: #3498db;
+            color: #fff;
+        }
+        .install-section {
+            margin-bottom: 24px;
+        }
+        .install-section h4 {
+            color: #3498db;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+        .install-cmd {
+            background: #0a0a0a;
+            border-radius: 8px;
+            padding: 16px;
+            position: relative;
+            margin-bottom: 12px;
+        }
+        .install-cmd pre {
+            color: #2ecc71;
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .install-cmd .copy-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #2a2a3e;
+            border: none;
+            color: #888;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .install-cmd .copy-btn:hover {
+            background: #3a3a4e;
+            color: #fff;
+        }
+        .install-cmd .copy-btn.copied {
+            background: #2ecc71;
+            color: #fff;
+        }
+        .install-note {
+            background: #2a3a4e;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 13px;
+            color: #aaa;
+        }
+        .install-note strong {
+            color: #f39c12;
+        }
+        .install-links {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .install-link {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #3498db;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        .install-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <div class="setup-card">
+            <div class="logo">
+                <h1>Pulse-TeX</h1>
+                <p>AI-powered LaTeX Writing Tool</p>
+            </div>
+
+            <div class="steps">
+                <div class="step active" id="step-1">1</div>
+                <div class="step-line" id="line-1"></div>
+                <div class="step" id="step-2">2</div>
+                <div class="step-line" id="line-2"></div>
+                <div class="step" id="step-3">3</div>
+                <div class="step-line" id="line-3"></div>
+                <div class="step" id="step-4">4</div>
+            </div>
+
+            <!-- Step 1: LaTeX Engine -->
+            <div class="form-section active" id="section-1">
+                <h2>选择编译引擎</h2>
+                <p class="hint">选择用于编译 LaTeX 文档的引擎</p>
+                
+                <div class="engine-grid" id="engine-grid"></div>
+                
+                <div class="install-hint" id="install-hint" style="display:none">
+                    <strong>安装提示：</strong><span id="install-hint-text"></span>
+                    <button class="btn btn-secondary" onclick="showInstallModal()" style="margin-left: 12px; padding: 6px 12px; font-size: 12px;">
+                        查看详细安装指南
+                    </button>
+                </div>
+
+                <div class="buttons">
+                    <div></div>
+                    <button class="btn btn-primary" onclick="nextStep()">下一步</button>
+                </div>
+            </div>
+
+            <!-- Step 2: BibTeX Engine -->
+            <div class="form-section" id="section-2">
+                <h2>选择参考文献引擎</h2>
+                <p class="hint">用于处理参考文献引用 (BibTeX 格式)</p>
+                
+                <div class="engine-grid" id="bibtex-grid"></div>
+                
+                <div class="install-hint" id="bibtex-hint" style="display:none">
+                    <strong>提示：</strong><span id="bibtex-hint-text"></span>
+                </div>
+
+                <div class="buttons">
+                    <button class="btn btn-secondary" onclick="prevStep()">上一步</button>
+                    <button class="btn btn-primary" onclick="nextStep()">下一步</button>
+                </div>
+            </div>
+
+            <!-- Install Modal -->
+            <div class="install-modal" id="install-modal">
+                <div class="install-modal-content">
+                    <div class="install-modal-header">
+                        <h3 id="install-modal-title">安装 LaTeX 引擎</h3>
+                        <button class="install-modal-close" onclick="closeInstallModal()">&times;</button>
+                    </div>
+                    
+                    <div class="install-tabs" id="install-tabs"></div>
+                    
+                    <div id="install-content"></div>
+                </div>
+            </div>
+
+            <!-- Step 3: AI Configuration -->
+            <div class="form-section" id="section-3">
+                <h2>配置 AI 服务</h2>
+                <p class="hint">配置 AI API 用于智能写作辅助</p>
+
+                <div class="form-group">
+                    <label>API Base URL</label>
+                    <input type="text" id="ai-base-url" placeholder="https://llmapi.paratera.com" value="https://llmapi.paratera.com">
+                    <p style="color:#888; font-size:12px; margin-top:6px">支持 OpenAI 兼容的 API 服务</p>
+                </div>
+
+                <div class="form-group">
+                    <label>API Key</label>
+                    <input type="password" id="ai-api-key" placeholder="sk-...">
+                </div>
+
+                <div class="form-group">
+                    <label>模型名称</label>
+                    <input type="text" id="ai-model" placeholder="DeepSeek-V3.2" value="DeepSeek-V3.2">
+                </div>
+
+                <button class="btn btn-secondary" onclick="testAI()" style="width:100%; margin-bottom:16px">
+                    测试连接
+                </button>
+                <div class="test-result" id="ai-test-result"></div>
+
+                <div class="buttons">
+                    <button class="btn btn-secondary" onclick="prevStep()">上一步</button>
+                    <button class="btn btn-primary" onclick="nextStep()">下一步</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Complete -->
+            <div class="form-section" id="section-4">
+                <h2>完成配置</h2>
+                <p class="hint">确认以下配置并开始使用</p>
+
+                <div style="background:#2a2a3e; border-radius:8px; padding:20px; margin-bottom:24px">
+                    <div style="margin-bottom:12px"><strong>编译引擎：</strong><span id="summary-engine"></span></div>
+                    <div style="margin-bottom:12px"><strong>参考文献引擎：</strong><span id="summary-bibtex"></span></div>
+                    <div style="margin-bottom:12px"><strong>AI 服务：</strong><span id="summary-ai"></span></div>
+                    <div style="margin-bottom:12px"><strong>AI 模型：</strong><span id="summary-model"></span></div>
+                    <div><strong>API Key：</strong><span id="summary-key"></span></div>
+                </div>
+
+                <div class="buttons">
+                    <button class="btn btn-secondary" onclick="prevStep()">上一步</button>
+                    <button class="btn btn-primary" onclick="saveConfig()">完成配置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let status = null;
+        let config = {
+            latex_engine: 'tectonic',
+            bibtex_engine: 'biber',
+            ai_base_url: 'https://llmapi.paratera.com',
+            ai_api_key: '',
+            ai_model: 'DeepSeek-V3.2',
+        };
+
+        async function loadStatus() {
+            const res = await fetch('/api/config/status');
+            status = await res.json();
+            renderEngines();
+            renderBibTeXEngines();
+        }
+
+        function renderEngines() {
+            const grid = document.getElementById('engine-grid');
+            grid.innerHTML = '';
+            
+            for (const [id, info] of Object.entries(status.latex_engines)) {
+                const div = document.createElement('div');
+                div.className = 'engine-option' + (info.available ? '' : ' unavailable');
+                if (config.latex_engine === id) div.classList.add('selected');
+                
+                div.innerHTML = `
+                    <div class="engine-name">
+                        ${info.name}
+                        <span class="engine-status ${info.available ? 'available' : 'unavailable'}" 
+                              style="cursor: ${info.available ? 'default' : 'pointer'}"
+                              onclick="${info.available ? '' : `event.stopPropagation(); currentInstallEngine='${id}'; showInstallModal();`}">
+                            ${info.available ? '✓ 已安装' : '✗ 点击查看安装方法'}
+                        </span>
+                    </div>
+                    <div class="engine-desc">${info.desc}</div>
+                `;
+                
+                div.onclick = (e) => selectEngine(id, info);
+                grid.appendChild(div);
+            }
+        }
+
+        function renderBibTeXEngines() {
+            const grid = document.getElementById('bibtex-grid');
+            grid.innerHTML = '';
+            
+            for (const [id, info] of Object.entries(status.bibtex_engines)) {
+                const div = document.createElement('div');
+                div.className = 'engine-option' + (info.available ? '' : ' unavailable');
+                if (config.bibtex_engine === id) div.classList.add('selected');
+                
+                div.innerHTML = `
+                    <div class="engine-name">
+                        ${info.name}
+                        <span class="engine-status ${info.available ? 'available' : 'unavailable'}">
+                            ${info.available ? '✓ 已安装' : '✗ 未安装'}
+                        </span>
+                    </div>
+                    <div class="engine-desc">${info.desc}</div>
+                `;
+                
+                div.onclick = (e) => selectBibTeXEngine(id, info);
+                grid.appendChild(div);
+            }
+            
+            updateBibTeXHint();
+        }
+
+        function selectEngine(id, info) {
+            config.latex_engine = id;
+            document.querySelectorAll('#engine-grid .engine-option').forEach(el => el.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+            
+            currentInstallEngine = id;
+            const hint = document.getElementById('install-hint');
+            const hintText = document.getElementById('install-hint-text');
+            
+            if (!info.available) {
+                hintText.innerHTML = `${info.name} 未安装。`;
+                hint.style.display = 'block';
+            } else {
+                hint.style.display = 'none';
+            }
+        }
+
+        function selectBibTeXEngine(id, info) {
+            config.bibtex_engine = id;
+            document.querySelectorAll('#bibtex-grid .engine-option').forEach(el => el.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+            updateBibTeXHint();
+        }
+
+        function updateBibTeXHint() {
+            const hint = document.getElementById('bibtex-hint');
+            const hintText = document.getElementById('bibtex-hint-text');
+            
+            const selectedEngine = status.bibtex_engines[config.bibtex_engine];
+            const latexEngine = status.latex_engines[config.latex_engine];
+            
+            if (latexEngine && latexEngine.name === 'Tectonic') {
+                hintText.innerHTML = 'Tectonic 内置 Biber 支持，无需单独安装。';
+                hint.style.display = 'block';
+            } else if (!selectedEngine.available) {
+                hintText.innerHTML = `${selectedEngine.name} 未安装。TeX Live 会自动包含这些工具，或使用 Tectonic 引擎。`;
+                hint.style.display = 'block';
+            } else {
+                hint.style.display = 'none';
+            }
+        }
+
+        async function testAI() {
+            const result = document.getElementById('ai-test-result');
+            result.className = 'test-result';
+            result.textContent = '测试中...';
+            
+            try {
+                const res = await fetch('/api/config/test-ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ai_api_key: document.getElementById('ai-api-key').value,
+                        ai_base_url: document.getElementById('ai-base-url').value,
+                        ai_model: document.getElementById('ai-model').value,
+                    }),
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    result.className = 'test-result success';
+                    result.textContent = '✓ ' + data.message;
+                } else {
+                    result.className = 'test-result error';
+                    result.textContent = '✗ ' + (data.detail || '连接失败');
+                }
+            } catch (e) {
+                result.className = 'test-result error';
+                result.textContent = '✗ 请求失败: ' + e.message;
+            }
+        }
+
+        function nextStep() {
+            if (currentStep === 3) {
+                config.ai_base_url = document.getElementById('ai-base-url').value;
+                config.ai_api_key = document.getElementById('ai-api-key').value;
+                config.ai_model = document.getElementById('ai-model').value;
+                
+                // Update summary
+                document.getElementById('summary-engine').textContent = status.latex_engines[config.latex_engine].name;
+                document.getElementById('summary-bibtex').textContent = status.bibtex_engines[config.bibtex_engine].name;
+                document.getElementById('summary-ai').textContent = config.ai_base_url;
+                document.getElementById('summary-model').textContent = config.ai_model;
+                document.getElementById('summary-key').textContent = config.ai_api_key ? config.ai_api_key.substring(0, 8) + '...' : '(未设置)';
+            }
+            
+            if (currentStep < 4) {
+                document.getElementById(`section-${currentStep}`).classList.remove('active');
+                document.getElementById(`step-${currentStep}`).classList.remove('active');
+                document.getElementById(`step-${currentStep}`).classList.add('done');
+                document.getElementById(`line-${currentStep}`).classList.add('done');
+                currentStep++;
+                document.getElementById(`section-${currentStep}`).classList.add('active');
+                document.getElementById(`step-${currentStep}`).classList.add('active');
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                document.getElementById(`section-${currentStep}`).classList.remove('active');
+                document.getElementById(`step-${currentStep}`).classList.remove('active');
+                currentStep--;
+                document.getElementById(`section-${currentStep}`).classList.add('active');
+                document.getElementById(`step-${currentStep}`).classList.remove('done');
+                document.getElementById(`step-${currentStep}`).classList.add('active');
+                document.getElementById(`line-${currentStep}`).classList.remove('done');
+            }
+        }
+
+        async function saveConfig() {
+            try {
+                const res = await fetch('/api/config/init', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config),
+                });
+                
+                if (res.ok) {
+                    window.location.href = '/';
+                } else {
+                    const data = await res.json();
+                    alert('保存失败: ' + (data.detail || '未知错误'));
+                }
+            } catch (e) {
+                alert('请求失败: ' + e.message);
+            }
+        }
+
+        loadStatus();
+
+        const INSTALL_GUIDES = {
+            tectonic: {
+                name: "Tectonic",
+                url: "https://tectonic-typesetting.github.io/book/latest/",
+                platforms: {
+                    linux: {
+                        name: "Linux",
+                        cmds: [
+                            { desc: "方法 1: 下载预编译二进制", cmd: "curl -LO https://github.com/tectonic-typesetting/tectonic/releases/latest/download/tectonic-x86_64-unknown-linux-gnu.tar.gz\ntar -xzf tectonic-x86_64-unknown-linux-gnu.tar.gz\nsudo mv tectonic /usr/local/bin/" },
+                            { desc: "方法 2: 使用 Conda", cmd: "conda install -c conda-forge tectonic" },
+                        ],
+                        note: "Tectonic 会自动下载缺失的 LaTeX 包，首次编译需要网络连接。"
+                    },
+                    macos: {
+                        name: "macOS",
+                        cmds: [
+                            { desc: "使用 Homebrew (推荐)", cmd: "brew install tectonic" },
+                            { desc: "使用 Conda", cmd: "conda install -c conda-forge tectonic" },
+                        ],
+                        note: "Homebrew 安装最简单，推荐使用。"
+                    },
+                    windows: {
+                        name: "Windows",
+                        cmds: [
+                            { desc: "方法 1: 使用 winget", cmd: "winget install tectonic" },
+                            { desc: "方法 2: 使用 scoop", cmd: "scoop install tectonic" },
+                            { desc: "方法 3: 使用 Chocolatey", cmd: "choco install tectonic" },
+                        ],
+                        note: "安装后需要重新打开终端窗口。"
+                    }
+                }
+            },
+            pdflatex: {
+                name: "pdfLaTeX (TeX Live)",
+                url: "https://tug.org/texlive/",
+                platforms: {
+                    linux: {
+                        name: "Linux",
+                        cmds: [
+                            { desc: "Ubuntu/Debian (完整安装 ~5GB)", cmd: "sudo apt update\nsudo apt install texlive-full" },
+                            { desc: "Ubuntu/Debian (精简安装)", cmd: "sudo apt update\nsudo apt install texlive-latex-base texlive-latex-extra texlive-fonts-recommended" },
+                            { desc: "Arch Linux", cmd: "sudo pacman -S texlive-most" },
+                            { desc: "Fedora", cmd: "sudo dnf install texlive-scheme-full" },
+                        ],
+                        note: "完整安装约 5GB，精简安装约 200MB。推荐使用精简安装，按需补充缺失包。"
+                    },
+                    macos: {
+                        name: "macOS",
+                        cmds: [
+                            { desc: "使用 Homebrew (推荐)", cmd: "brew install --cask mactex" },
+                            { desc: "使用 MacPorts", cmd: "sudo port install texlive +full" },
+                        ],
+                        note: "MacTeX 完整安装约 4GB。也可以下载官方安装包。"
+                    },
+                    windows: {
+                        name: "Windows",
+                        cmds: [
+                            { desc: "方法 1: 官方安装程序", cmd: "# 下载: https://tug.org/texlive/acquire-netinstall.html\n# 运行 install-tl-windows.exe" },
+                            { desc: "方法 2: 使用 Chocolatey", cmd: "choco install texlive" },
+                            { desc: "方法 3: 使用 winget", cmd: "winget install TeXLive" },
+                        ],
+                        note: "官方安装程序可自定义安装组件，减少磁盘占用。"
+                    }
+                }
+            },
+            xelatex: {
+                name: "XeLaTeX (TeX Live)",
+                url: "https://tug.org/texlive/",
+                platforms: {
+                    linux: {
+                        name: "Linux",
+                        cmds: [
+                            { desc: "XeLaTeX 包含在 TeX Live 中", cmd: "sudo apt update\nsudo apt install texlive-full\n# 或精简安装:\nsudo apt install texlive-xetex texlive-latex-extra" },
+                        ],
+                        note: "XeLaTeX 支持 Unicode 和系统字体，非常适合中文文档。"
+                    },
+                    macos: {
+                        name: "macOS",
+                        cmds: [
+                            { desc: "XeLaTeX 包含在 MacTeX 中", cmd: "brew install --cask mactex" },
+                        ],
+                        note: "XeLaTeX 可以直接使用 macOS 系统字体。"
+                    },
+                    windows: {
+                        name: "Windows",
+                        cmds: [
+                            { desc: "XeLaTeX 包含在 TeX Live 中", cmd: "# 下载 TeX Live: https://tug.org/texlive/acquire-netinstall.html" },
+                        ],
+                        note: "Windows 下需要安装中文字体才能正常编译中文文档。"
+                    }
+                }
+            },
+            lualatex: {
+                name: "LuaLaTeX (TeX Live)",
+                url: "https://tug.org/texlive/",
+                platforms: {
+                    linux: {
+                        name: "Linux",
+                        cmds: [
+                            { desc: "LuaLaTeX 包含在 TeX Live 中", cmd: "sudo apt update\nsudo apt install texlive-full\n# 或精简安装:\nsudo apt install texlive-luatex texlive-latex-extra" },
+                        ],
+                        note: "LuaLaTeX 内置 Lua 脚本引擎，功能强大但编译速度较慢。"
+                    },
+                    macos: {
+                        name: "macOS",
+                        cmds: [
+                            { desc: "LuaLaTeX 包含在 MacTeX 中", cmd: "brew install --cask mactex" },
+                        ],
+                        note: "LuaLaTeX 适合需要复杂编程功能的文档。"
+                    },
+                    windows: {
+                        name: "Windows",
+                        cmds: [
+                            { desc: "LuaLaTeX 包含在 TeX Live 中", cmd: "# 下载 TeX Live: https://tug.org/texlive/acquire-netinstall.html" },
+                        ],
+                        note: "LuaLaTeX 对中文支持良好，可使用 LuaOTFload 字体系统。"
+                    }
+                }
+            }
+        };
+
+        let currentInstallEngine = null;
+        let currentPlatform = 'linux';
+
+        function detectPlatform() {
+            const platform = navigator.platform.toLowerCase();
+            if (platform.includes('mac')) return 'macos';
+            if (platform.includes('win')) return 'windows';
+            return 'linux';
+        }
+
+        function showInstallModal() {
+            if (!currentInstallEngine) return;
+            
+            const modal = document.getElementById('install-modal');
+            const guide = INSTALL_GUIDES[currentInstallEngine];
+            
+            document.getElementById('install-modal-title').textContent = `安装 ${guide.name}`;
+            
+            // Render tabs
+            const tabs = document.getElementById('install-tabs');
+            const platforms = guide.platforms;
+            currentPlatform = detectPlatform();
+            
+            tabs.innerHTML = Object.keys(platforms).map(p => `
+                <button class="install-tab ${p === currentPlatform ? 'active' : ''}" onclick="switchPlatform('${p}')">
+                    ${platforms[p].name}
+                </button>
+            `).join('');
+            
+            renderInstallContent();
+            modal.classList.add('visible');
+        }
+
+        function closeInstallModal() {
+            document.getElementById('install-modal').classList.remove('visible');
+        }
+
+        function switchPlatform(platform) {
+            currentPlatform = platform;
+            document.querySelectorAll('.install-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.textContent.includes(INSTALL_GUIDES[currentInstallEngine].platforms[platform].name));
+            });
+            renderInstallContent();
+        }
+
+        function renderInstallContent() {
+            const guide = INSTALL_GUIDES[currentInstallEngine];
+            const platform = guide.platforms[currentPlatform];
+            const content = document.getElementById('install-content');
+            
+            let html = '';
+            
+            platform.cmds.forEach((cmd, i) => {
+                html += `
+                    <div class="install-section">
+                        <h4>${cmd.desc}</h4>
+                        <div class="install-cmd">
+                            <pre>${escapeHtml(cmd.cmd)}</pre>
+                            <button class="copy-btn" onclick="copyInstallCmd(this, \`${escapeJs(cmd.cmd)}\`)">
+                                复制
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            if (platform.note) {
+                html += `
+                    <div class="install-note">
+                        <strong>提示：</strong>${platform.note}
+                    </div>
+                `;
+            }
+            
+            html += `
+                <div class="install-links">
+                    <a href="${guide.url}" target="_blank" class="install-link">
+                        📖 官方文档
+                    </a>
+                </div>
+            `;
+            
+            content.innerHTML = html;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function escapeJs(text) {
+            return text.replace(/`/g, '\\`').replace(/\\/g, '\\\\');
+        }
+
+        function copyInstallCmd(btn, text) {
+            navigator.clipboard.writeText(text).then(() => {
+                btn.textContent = '已复制';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = '复制';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // Close modal on background click
+        document.getElementById('install-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'install-modal') {
+                closeInstallModal();
+            }
+        });
+    </script>
+</body>
+</html>

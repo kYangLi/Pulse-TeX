@@ -1,0 +1,97 @@
+[build-system]
+requires = ["setuptools>=80", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pulse-tex"
+version = "0.1.0"
+authors = [
+    {name = "Yang Li, OpenCode, GLM-5", email = "lyang.1915@gmail.com"},
+]
+description = "AI-powered LaTeX paper writing tool with Tectonic compilation"
+readme = "README.md"
+license = "GPL-3.0-or-later"
+keywords = [
+    "latex", "tex", "paper", "writing", "AI", "tectonic", "academic",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Text Editors :: Text Processing",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn>=0.27.0",
+    "sqlalchemy>=2.0.36",
+    "openai>=1.70.0",
+    "httpx>=0.27.0",
+    "click>=8.1.0",
+    "python-multipart>=0.0.6",
+    "aiofiles>=23.0.0",
+    "tqdm>=4.67.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+    "types-aiofiles>=23.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/kYangLi/Pulse-TeX"
+Repository = "https://github.com/kYangLi/Pulse-TeX.git"
+Documentation = "https://github.com/kYangLi/Pulse-TeX#readme"
+
+[project.scripts]
+tex-serve = "pulse_tex.cli:cli"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pulse_tex*"]
+
+[tool.setuptools.package-data]
+pulse_tex = ["web/static/**/*"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["I"]
+ignore = []
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["pulse_tex"]
+omit = ["tests/*", "*/__pycache__/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+]

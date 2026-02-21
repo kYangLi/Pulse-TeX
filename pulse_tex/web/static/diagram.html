@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagram Workbench - Pulse-TeX</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/diagram.css">
+</head>
+<body>
+    <div id="app" class="diagram-app">
+        <header class="diagram-header">
+            <div class="header-left">
+                <a href="/" class="logo">Pulse-TeX</a>
+                <span class="divider">|</span>
+                <span class="page-title">Diagram Workbench</span>
+            </div>
+            <div class="header-center">
+                <select id="style-select" class="style-select">
+                    <option value="nature">Nature Style</option>
+                    <option value="science">Science Style</option>
+                    <option value="ieee">IEEE Style</option>
+                    <option value="minimal">Minimal Style</option>
+                </select>
+                <select id="type-select" class="style-select">
+                    <option value="flowchart">Flowchart</option>
+                    <option value="schematic">Scientific Schematic</option>
+                    <option value="architecture">Architecture</option>
+                    <option value="comparison">Comparison</option>
+                    <option value="timeline">Timeline</option>
+                </select>
+            </div>
+            <div class="header-right">
+                <button class="btn btn-secondary" onclick="clearCanvas()">Clear</button>
+                <button class="btn btn-secondary" onclick="loadContext()">Load Context</button>
+                <button class="btn btn-primary" onclick="exportSVG()">Export SVG</button>
+                <button class="btn btn-primary" onclick="exportTikZ()">Export TikZ</button>
+            </div>
+        </header>
+        
+        <main class="diagram-main">
+            <section class="canvas-section">
+                <div class="section-header">
+                    <span>Sketch Canvas</span>
+                    <span class="hint">Draw your rough sketch here</span>
+                </div>
+                <div class="canvas-container" id="canvas-container">
+                    <div id="excalidraw-wrapper"></div>
+                </div>
+            </section>
+            
+            <section class="ai-section">
+                <div class="section-header">
+                    <span>AI Assistant</span>
+                </div>
+                <div class="ai-content">
+                    <div class="ai-chat" id="ai-chat">
+                        <div class="ai-welcome">
+                            <p>Welcome to Diagram Workbench!</p>
+                            <p>Draw a rough sketch on the left, then describe what you want. AI will create a publication-ready diagram.</p>
+                        </div>
+                    </div>
+                    <div class="ai-input-container">
+                        <textarea id="ai-input" placeholder="Describe your diagram or ask for modifications..." rows="3"></textarea>
+                        <div class="ai-actions">
+                            <button class="btn btn-secondary" onclick="generateFromText()">Generate from Text</button>
+                            <button class="btn btn-primary" onclick="refineSketch()">Refine Sketch</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <section class="preview-section" id="preview-section">
+            <div class="section-header">
+                <span>Preview</span>
+                <div class="preview-actions">
+                    <button class="btn-icon" onclick="downloadSVG()" title="Download SVG">↓</button>
+                    <button class="btn-icon" onclick="copySVG()" title="Copy SVG Code">⎘</button>
+                    <button class="btn-icon" onclick="togglePreviewFullscreen()" title="Fullscreen">⛶</button>
+                </div>
+            </div>
+            <div class="preview-container" id="preview-container">
+                <div class="preview-placeholder">
+                    <p>Your refined diagram will appear here</p>
+                    <p class="hint">Draw a sketch and click "Refine Sketch" or describe what you want and click "Generate from Text"</p>
+                </div>
+            </div>
+            <div class="tikz-output" id="tikz-output">
+                <div class="tikz-header">
+                    <span>TikZ Code</span>
+                    <button class="btn-icon" onclick="copyTikZ()">⎘</button>
+                </div>
+                <pre id="tikz-code"></pre>
+            </div>
+        </section>
+    </div>
+    
+    <div class="context-modal" id="context-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Load Paper Context</span>
+                <button class="btn-icon" onclick="closeContextModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <label>Select Project:</label>
+                <select id="context-project-select"></select>
+                <label>Select File:</label>
+                <select id="context-file-select"></select>
+                <p class="hint">The selected file content will be used as context for AI to understand your diagram needs.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeContextModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="confirmLoadContext()">Load</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <span>AI is working...</span>
+    </div>
+    
+    <script src="/libs/react/react.production.min.js"></script>
+    <script src="/libs/react/react-dom.production.min.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/@excalidraw/excalidraw/dist/excalidraw.production.min.js"></script>
+    <script src="/js/diagram.js"></script>
+</body>
+</html>

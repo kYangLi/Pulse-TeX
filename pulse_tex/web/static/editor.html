@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulse-TeX Editor</title>
+    <link rel="stylesheet" href="/css/editor.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div id="app" class="editor-app">
+        <header class="editor-header">
+            <div class="header-left">
+                <a href="/" class="logo">Pulse-TeX</a>
+                <span class="project-name" id="project-name">Loading...</span>
+            </div>
+            <div class="header-center">
+                <button id="btn-compile" class="btn btn-primary" onclick="compileProject()">
+                    Compile (Ctrl+S)
+                </button>
+                <button id="btn-save" class="btn" onclick="saveCurrentFile()">
+                    Save
+                </button>
+                <button id="btn-ai" class="btn" onclick="toggleAIPanel()">
+                    AI
+                </button>
+                <button id="btn-literature" class="btn" onclick="toggleLiteraturePanel()">
+                    Lit
+                </button>
+            </div>
+            <div class="header-right">
+                <span id="compile-status"></span>
+            </div>
+        </header>
+        
+        <main class="editor-main">
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <span>Files</span>
+                    <button class="btn-icon" onclick="createNewFile()" title="New File">+</button>
+                </div>
+                <ul class="file-tree" id="file-tree"></ul>
+            </aside>
+            
+            <div class="editor-container" id="editor-container"></div>
+            
+            <div class="preview-container" id="preview-container">
+                <div class="preview-header">
+                    <span>Preview</span>
+                    <button class="btn-icon" onclick="refreshPreview()" title="Refresh">&#8635;</button>
+                </div>
+                <canvas id="pdf-canvas"></canvas>
+                <div class="pdf-controls">
+                    <button onclick="prevPage()">&lt;</button>
+                    <span id="page-info">0 / 0</span>
+                    <button onclick="nextPage()">&gt;</button>
+                    <input type="number" id="zoom-level" value="100" min="50" max="200" onchange="setZoom(this.value)">
+                    <span>%</span>
+                </div>
+            </div>
+        </main>
+        
+        <div class="error-panel" id="error-panel">
+            <div class="error-header">
+                <span>Compilation Log</span>
+                <button class="btn-icon" onclick="toggleErrorPanel()">×</button>
+            </div>
+            <pre id="error-log"></pre>
+        </div>
+        
+        <div class="ai-panel" id="ai-panel">
+            <div class="ai-panel-header">
+                <span>AI Assistant</span>
+                <button class="btn-icon" onclick="toggleAIPanel()">×</button>
+            </div>
+            <div class="ai-chat" id="ai-chat"></div>
+            <div class="ai-input-area">
+                <textarea id="ai-input" placeholder="Ask AI..." rows="2"></textarea>
+                <button class="btn btn-primary" onclick="sendAIMessage()">Send</button>
+            </div>
+        </div>
+        
+        <div class="ai-context-menu" id="ai-context-menu">
+            <button onclick="aiPolish()">Polish</button>
+            <button onclick="aiTranslate('en')">EN</button>
+            <button onclick="aiTranslate('zh')">ZH</button>
+            <button onclick="aiExplain()">Explain</button>
+        </div>
+        
+        <div class="literature-panel" id="literature-panel">
+            <div class="literature-panel-header">
+                <span>Literature Search</span>
+                <button class="btn-icon" onclick="toggleLiteraturePanel()">×</button>
+            </div>
+            <div class="literature-search">
+                <input type="text" id="literature-search-input" placeholder="Search arXiv..." onkeydown="if(event.key==='Enter')searchLiterature()">
+                <button class="btn btn-primary" onclick="searchLiterature()">Search</button>
+            </div>
+            <div class="literature-status" id="literature-status"></div>
+            <div class="literature-results" id="literature-results"></div>
+        </div>
+    </div>
+    
+    <script src="/libs/pdfjs/pdf.min.js"></script>
+    <script src="/libs/vs/loader.js"></script>
+    <script src="/js/editor.js"></script>
+</body>
+</html>
