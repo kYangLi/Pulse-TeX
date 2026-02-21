@@ -1,153 +1,1706 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pulse-TeX Editor</title>
-    <link rel="stylesheet" href="/css/editor.css">
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        body {
+            overflow: hidden;
+        }
+        .editor-app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: var(--bg-base);
+        }
+        .editor-navbar {
+            height: var(--nav-height);
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-default);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--space-4);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        .editor-navbar-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+        .editor-navbar-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-weight: 700;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+        .editor-navbar-logo svg {
+            width: 20px;
+            height: 20px;
+        }
+        .project-selector {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-1) var(--space-3);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+        }
+        .project-selector:hover {
+            background: var(--bg-surface);
+        }
+        .editor-navbar-center {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .action-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+        .action-btn.compile {
+            background: var(--accent-primary);
+            color: #fff;
+            border: none;
+        }
+        .action-btn.compile:hover {
+            background: #4c9aed;
+        }
+        .action-btn.save {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-default);
+        }
+        .action-btn.save:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+        .action-btn.panel-toggle {
+            padding: var(--space-2);
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+        }
+        .action-btn.panel-toggle:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+        .action-btn.panel-toggle.active {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+        .action-btn.panel-toggle.ai.active { color: var(--accent-ai); }
+        .action-btn.panel-toggle.lit.active { color: var(--accent-success); }
+        .action-btn.panel-toggle.draw.active { color: var(--accent-warning); }
+        .editor-navbar-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+        .compile-status {
+            font-size: var(--text-xs);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+        }
+        .compile-status.success { background: rgba(63,185,80,0.15); color: var(--accent-success); }
+        .compile-status.error { background: rgba(248,81,73,0.15); color: var(--accent-danger); }
+        .compile-status.loading { background: rgba(210,153,34,0.15); color: var(--accent-warning); }
+        .editor-main {
+            display: flex;
+            flex: 1;
+            padding-top: var(--nav-height);
+            overflow: hidden;
+        }
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-default);
+            display: flex;
+            flex-direction: column;
+            transition: width var(--transition-normal);
+            overflow: hidden;
+        }
+        .sidebar.collapsed {
+            width: var(--sidebar-collapsed);
+        }
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-3);
+            border-bottom: 1px solid var(--border-default);
+            min-height: 44px;
+        }
+        .sidebar-title {
+            font-size: var(--text-xs);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+        }
+        .sidebar.collapsed .sidebar-title {
+            display: none;
+        }
+        .sidebar-toggle {
+            padding: var(--space-1);
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+        }
+        .sidebar-toggle:hover {
+            color: var(--text-primary);
+            background: var(--bg-elevated);
+        }
+        .sidebar-toggle svg {
+            width: 16px;
+            height: 16px;
+            transition: transform var(--transition-fast);
+        }
+        .sidebar.collapsed .sidebar-toggle svg {
+            transform: rotate(180deg);
+        }
+        .file-tree {
+            flex: 1;
+            overflow-y: auto;
+            list-style: none;
+            padding: var(--space-2);
+        }
+        .sidebar.collapsed .file-tree {
+            display: none;
+        }
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2);
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .file-item:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+        .file-item.active {
+            background: rgba(88,166,255,0.15);
+            color: var(--accent-primary);
+        }
+        .file-item svg {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+        .file-item .file-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .file-actions {
+            display: none;
+            gap: var(--space-1);
+        }
+        .file-item:hover .file-actions {
+            display: flex;
+        }
+        .file-action-btn {
+            padding: 2px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+        }
+        .file-action-btn:hover {
+            color: var(--text-primary);
+            background: var(--bg-surface);
+        }
+        .file-action-btn svg {
+            width: 14px;
+            height: 14px;
+        }
+        .sidebar-footer {
+            padding: var(--space-2);
+            border-top: 1px solid var(--border-default);
+        }
+        .sidebar.collapsed .sidebar-footer {
+            display: none;
+        }
+        .new-file-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            padding: var(--space-2);
+            background: transparent;
+            border: 1px dashed var(--border-default);
+            border-radius: var(--radius-md);
+            color: var(--text-muted);
+            font-size: var(--text-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .new-file-btn:hover {
+            border-color: var(--accent-primary);
+            color: var(--accent-primary);
+        }
+        .editor-panels {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        .code-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 300px;
+            background: var(--bg-base);
+        }
+        .editor-container {
+            flex: 1;
+            overflow: hidden;
+        }
+        .preview-panel {
+            width: 45%;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-surface);
+            border-left: 1px solid var(--border-default);
+        }
+        .preview-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-2) var(--space-3);
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-default);
+            font-size: var(--text-sm);
+        }
+        .preview-title {
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .preview-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+        }
+        .pdf-container {
+            flex: 1;
+            overflow: auto;
+            background: #525659;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: var(--space-4);
+        }
+        #pdf-canvas {
+            background: #fff;
+            box-shadow: var(--shadow-lg);
+        }
+        .pdf-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-3);
+            padding: var(--space-2) var(--space-3);
+            background: var(--bg-elevated);
+            border-top: 1px solid var(--border-default);
+            font-size: var(--text-sm);
+        }
+        .pdf-controls button {
+            padding: var(--space-1) var(--space-2);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        .pdf-controls button:hover {
+            background: var(--bg-elevated);
+        }
+        .pdf-controls input {
+            width: 50px;
+            text-align: center;
+            padding: var(--space-1);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-sm);
+            color: var(--text-primary);
+        }
+        .slide-panel {
+            position: fixed;
+            top: var(--nav-height);
+            right: 0;
+            bottom: 0;
+            width: 400px;
+            background: var(--bg-surface);
+            border-left: 1px solid var(--border-default);
+            transform: translateX(100%);
+            transition: transform var(--transition-normal);
+            z-index: 90;
+            display: flex;
+            flex-direction: column;
+        }
+        .slide-panel.visible {
+            transform: translateX(0);
+        }
+        .slide-panel.wide {
+            width: 500px;
+        }
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-3) var(--space-4);
+            border-bottom: 1px solid var(--border-default);
+        }
+        .panel-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        .panel-title svg {
+            width: 18px;
+            height: 18px;
+        }
+        .panel-close {
+            padding: var(--space-1);
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: var(--radius-sm);
+        }
+        .panel-close:hover {
+            color: var(--text-primary);
+            background: var(--bg-elevated);
+        }
+        .panel-close svg {
+            width: 18px;
+            height: 18px;
+        }
+        .panel-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-4);
+        }
+        .panel-footer {
+            padding: var(--space-3) var(--space-4);
+            border-top: 1px solid var(--border-default);
+        }
+        .ai-panel .panel-body {
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+        .ai-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-default);
+            padding: 0 var(--space-3);
+        }
+        .ai-tab {
+            padding: var(--space-2) var(--space-3);
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            margin-bottom: -1px;
+        }
+        .ai-tab:hover {
+            color: var(--text-primary);
+        }
+        .ai-tab.active {
+            color: var(--accent-ai);
+            border-bottom-color: var(--accent-ai);
+        }
+        .ai-chat {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--space-4);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-3);
+        }
+        .ai-message {
+            max-width: 85%;
+            padding: var(--space-3);
+            border-radius: var(--radius-lg);
+            font-size: var(--text-sm);
+            line-height: 1.5;
+        }
+        .ai-message.user {
+            background: var(--accent-ai);
+            color: #fff;
+            align-self: flex-end;
+        }
+        .ai-message.assistant {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            align-self: flex-start;
+        }
+        .ai-message.error {
+            background: rgba(248,81,73,0.15);
+            color: var(--accent-danger);
+        }
+        .ai-input-area {
+            padding: var(--space-3);
+            border-top: 1px solid var(--border-default);
+            display: flex;
+            gap: var(--space-2);
+        }
+        .ai-input {
+            flex: 1;
+            padding: var(--space-2) var(--space-3);
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: var(--text-sm);
+            resize: none;
+        }
+        .ai-input:focus {
+            outline: none;
+            border-color: var(--accent-ai);
+        }
+        .literature-search {
+            display: flex;
+            gap: var(--space-2);
+            margin-bottom: var(--space-3);
+        }
+        .literature-search input {
+            flex: 1;
+        }
+        .lit-status {
+            font-size: var(--text-xs);
+            padding: var(--space-2) var(--space-3);
+            background: var(--bg-elevated);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-3);
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+        .lit-status.connected { color: var(--accent-success); }
+        .lit-status.disconnected { color: var(--accent-danger); }
+        .lit-paper {
+            padding: var(--space-3);
+            background: var(--bg-elevated);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-3);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .lit-paper:hover {
+            background: var(--bg-surface);
+            box-shadow: var(--shadow-sm);
+        }
+        .lit-paper-title {
+            font-size: var(--text-sm);
+            font-weight: 500;
+            margin-bottom: var(--space-1);
+            line-height: 1.4;
+        }
+        .lit-paper-authors {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            margin-bottom: var(--space-2);
+        }
+        .lit-paper-actions {
+            display: flex;
+            gap: var(--space-2);
+        }
+        .lit-paper-actions button {
+            padding: var(--space-1) var(--space-2);
+            font-size: var(--text-xs);
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        .lit-paper-actions button:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+        }
+        .lit-paper-actions button.primary {
+            background: var(--accent-success);
+            border-color: var(--accent-success);
+            color: #fff;
+        }
+        .diagram-toolbar {
+            display: flex;
+            gap: var(--space-2);
+            padding: var(--space-3);
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-default);
+            flex-wrap: wrap;
+        }
+        .diagram-tool {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .diagram-tool:hover {
+            background: var(--bg-elevated);
+            border-color: var(--accent-primary);
+        }
+        .diagram-tool.active {
+            background: var(--accent-warning);
+            border-color: var(--accent-warning);
+            color: #fff;
+        }
+        .diagram-tool svg {
+            width: 18px;
+            height: 18px;
+        }
+        .diagram-color {
+            width: 36px;
+            height: 36px;
+            padding: 4px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+        }
+        .diagram-canvas-wrapper {
+            flex: 1;
+            min-height: 200px;
+            background: #fff;
+            position: relative;
+        }
+        #diagram-canvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+        .diagram-actions {
+            display: flex;
+            gap: var(--space-2);
+            padding: var(--space-3);
+            background: var(--bg-elevated);
+            border-top: 1px solid var(--border-default);
+            flex-wrap: wrap;
+        }
+        .diagram-actions select,
+        .diagram-actions input {
+            flex: 1;
+            min-width: 120px;
+        }
+        .diagram-preview {
+            max-height: 150px;
+            overflow: auto;
+            background: #fff;
+            border-top: 1px solid var(--border-default);
+            display: none;
+        }
+        .diagram-preview.visible {
+            display: block;
+        }
+        .diagram-preview svg {
+            max-width: 100%;
+        }
+        .diagram-export {
+            display: flex;
+            gap: var(--space-2);
+            padding: var(--space-3);
+            background: var(--bg-elevated);
+            border-top: 1px solid var(--border-default);
+        }
+        .context-menu {
+            position: fixed;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            padding: var(--space-1);
+            min-width: 150px;
+            z-index: 1000;
+            display: none;
+        }
+        .context-menu.visible {
+            display: block;
+        }
+        .context-menu-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+        }
+        .context-menu-item:hover {
+            background: var(--bg-elevated);
+        }
+        .context-menu-item svg {
+            width: 16px;
+            height: 16px;
+            color: var(--text-muted);
+        }
+        .context-menu-divider {
+            height: 1px;
+            background: var(--border-default);
+            margin: var(--space-1) 0;
+        }
+        .error-panel {
+            position: fixed;
+            bottom: 0;
+            left: var(--sidebar-width);
+            right: 45%;
+            height: 0;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border-default);
+            transition: height var(--transition-normal);
+            z-index: 80;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .sidebar.collapsed + .editor-panels .error-panel {
+            left: var(--sidebar-collapsed);
+        }
+        .error-panel.visible {
+            height: 200px;
+        }
+        .error-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-2) var(--space-3);
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-default);
+            font-size: var(--text-sm);
+        }
+        .error-log {
+            flex: 1;
+            overflow: auto;
+            padding: var(--space-3);
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            white-space: pre-wrap;
+            color: var(--text-secondary);
+        }
+        .error-log .error-line {
+            color: var(--accent-danger);
+        }
+        .error-log .warning-line {
+            color: var(--accent-warning);
+        }
+    </style>
 </head>
 <body>
-    <div id="app" class="editor-app">
-        <header class="editor-header">
-            <div class="header-left">
-                <a href="/" class="logo">Pulse-TeX</a>
-                <span class="project-name" id="project-name">Loading...</span>
+    <div class="editor-app">
+        <nav class="editor-navbar">
+            <div class="editor-navbar-left">
+                <a href="/" class="editor-navbar-logo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                </a>
+                <div class="project-selector" id="project-selector">
+                    <span id="project-name" data-i18n="editor.untitled">Untitled</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9l6 6 6-6"/>
+                    </svg>
+                </div>
             </div>
-            <div class="header-center">
-                <button id="btn-compile" class="btn btn-primary" onclick="compileProject()">
-                    Compile (Ctrl+S)
+            <div class="editor-navbar-center">
+                <button class="action-btn compile" onclick="compileProject()" id="compile-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                    <span data-i18n="editor.compile">Compile</span>
                 </button>
-                <button id="btn-save" class="btn" onclick="saveCurrentFile()">
-                    Save
+                <button class="action-btn save" onclick="saveCurrentFile()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                        <polyline points="17 21 17 13 7 13 7 21"/>
+                        <polyline points="7 3 7 8 15 8"/>
+                    </svg>
+                    <span data-i18n="editor.save">Save</span>
                 </button>
-                <button id="btn-ai" class="btn" onclick="toggleAIPanel()">
-                    AI
+                <div style="width:1px;height:24px;background:var(--border-default);margin:0 var(--space-2)"></div>
+                <button class="action-btn panel-toggle ai" onclick="togglePanel('ai')" id="ai-toggle" title="AI Assistant">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2z"/>
+                        <circle cx="8" cy="14" r="1"/>
+                        <circle cx="16" cy="14" r="1"/>
+                    </svg>
                 </button>
-                <button id="btn-literature" class="btn" onclick="toggleLiteraturePanel()">
-                    Lit
+                <button class="action-btn panel-toggle lit" onclick="togglePanel('literature')" id="lit-toggle" title="Literature">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                    </svg>
                 </button>
-                <button id="btn-diagram" class="btn" onclick="toggleDiagramPanel()">
-                    Draw
+                <button class="action-btn panel-toggle draw" onclick="togglePanel('diagram')" id="diagram-toggle" title="Diagram">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                        <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                        <path d="M2 2l7.586 7.586"/>
+                        <circle cx="11" cy="11" r="2"/>
+                    </svg>
                 </button>
             </div>
-            <div class="header-right">
-                <span id="compile-status"></span>
+            <div class="editor-navbar-right">
+                <span class="compile-status" id="compile-status"></span>
+                <button class="icon-btn" onclick="openSettingsFromEditor()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+                    </svg>
+                </button>
             </div>
-        </header>
-        
+        </nav>
+
         <main class="editor-main">
             <aside class="sidebar" id="sidebar">
                 <div class="sidebar-header">
-                    <span>Files</span>
-                    <button class="btn-icon" onclick="createNewFile()" title="New File">+</button>
+                    <span class="sidebar-title" data-i18n="editor.files">Files</span>
+                    <button class="sidebar-toggle" onclick="toggleSidebar()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
                 </div>
                 <ul class="file-tree" id="file-tree"></ul>
+                <div class="sidebar-footer">
+                    <button class="new-file-btn" onclick="createNewFile()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M5 12h14"/>
+                        </svg>
+                        <span data-i18n="editor.newFile">New File</span>
+                    </button>
+                </div>
             </aside>
-            
-            <div class="editor-container" id="editor-container"></div>
-            
-            <div class="preview-container" id="preview-container">
-                <div class="preview-header">
-                    <span>Preview</span>
-                    <button class="btn-icon" onclick="refreshPreview()" title="Refresh">&#8635;</button>
+
+            <div class="editor-panels">
+                <div class="code-panel">
+                    <div class="editor-container" id="editor-container"></div>
                 </div>
-                <canvas id="pdf-canvas"></canvas>
-                <div class="pdf-controls">
-                    <button onclick="prevPage()">&lt;</button>
-                    <span id="page-info">0 / 0</span>
-                    <button onclick="nextPage()">&gt;</button>
-                    <input type="number" id="zoom-level" value="100" min="50" max="200" onchange="setZoom(this.value)">
-                    <span>%</span>
+                <div class="preview-panel">
+                    <div class="preview-header">
+                        <span class="preview-title" data-i18n="editor.preview">Preview</span>
+                        <div class="preview-actions">
+                            <button class="icon-btn" onclick="refreshPreview()" title="Refresh">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 4v6h-6M1 20v-6h6"/>
+                                    <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+                                </svg>
+                            </button>
+                            <button class="icon-btn" onclick="downloadPdf()" title="Download PDF">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="pdf-container">
+                        <canvas id="pdf-canvas"></canvas>
+                    </div>
+                    <div class="pdf-controls">
+                        <button onclick="prevPage()">&lt;</button>
+                        <span><span id="current-page">1</span> / <span id="total-pages">1</span></span>
+                        <button onclick="nextPage()">&gt;</button>
+                        <input type="number" id="zoom-input" value="100" min="50" max="300" onchange="setZoom(this.value)">
+                        <span>%</span>
+                    </div>
                 </div>
+            </div>
+
+            <div class="error-panel" id="error-panel">
+                <div class="error-header">
+                    <span data-i18n="editor.compilationLog">Compilation Log</span>
+                    <button class="icon-btn" onclick="toggleErrorPanel()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <pre class="error-log" id="error-log"></pre>
             </div>
         </main>
-        
-        <div class="error-panel" id="error-panel">
-            <div class="error-header">
-                <span>Compilation Log</span>
-                <button class="btn-icon" onclick="toggleErrorPanel()">×</button>
+
+        <div class="slide-panel" id="ai-panel">
+            <div class="panel-header">
+                <span class="panel-title">
+                    <svg style="color:var(--accent-ai)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2z"/>
+                        <circle cx="8" cy="14" r="1"/>
+                        <circle cx="16" cy="14" r="1"/>
+                    </svg>
+                    <span data-i18n="ai.title">AI Assistant</span>
+                </span>
+                <button class="panel-close" onclick="togglePanel('ai')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
-            <pre id="error-log"></pre>
+            <div class="panel-body" style="padding:0;display:flex;flex-direction:column">
+                <div class="ai-tabs">
+                    <button class="ai-tab active" data-mode="chat" onclick="setAIMode('chat')" data-i18n="ai.modes.chat">Chat</button>
+                    <button class="ai-tab" data-mode="polish" onclick="setAIMode('polish')" data-i18n="ai.modes.polish">Polish</button>
+                    <button class="ai-tab" data-mode="translate" onclick="setAIMode('translate')" data-i18n="ai.modes.translate">Translate</button>
+                    <button class="ai-tab" data-mode="tikz" onclick="setAIMode('tikz')" data-i18n="ai.modes.tikz">TikZ</button>
+                </div>
+                <div class="ai-chat" id="ai-chat"></div>
+                <div class="ai-input-area">
+                    <textarea class="ai-input" id="ai-input" rows="2" data-i18n-placeholder="ai.placeholder" placeholder="Ask AI anything..."></textarea>
+                    <button class="btn btn-primary" onclick="sendAIMessage()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
-        
-        <div class="ai-panel" id="ai-panel">
-            <div class="ai-panel-header">
-                <span>AI Assistant</span>
-                <button class="btn-icon" onclick="toggleAIPanel()">×</button>
+
+        <div class="slide-panel" id="literature-panel">
+            <div class="panel-header">
+                <span class="panel-title">
+                    <svg style="color:var(--accent-success)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                    </svg>
+                    <span data-i18n="literature.title">Literature Search</span>
+                </span>
+                <button class="panel-close" onclick="togglePanel('literature')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
-            <div class="ai-chat" id="ai-chat"></div>
-            <div class="ai-input-area">
-                <textarea id="ai-input" placeholder="Ask AI..." rows="2"></textarea>
-                <button class="btn btn-primary" onclick="sendAIMessage()">Send</button>
+            <div class="panel-body">
+                <div class="literature-search">
+                    <input type="text" class="input" id="literature-search-input" data-i18n-placeholder="literature.placeholder" placeholder="Search arXiv..." onkeydown="if(event.key==='Enter')searchLiterature()">
+                    <button class="btn btn-primary" onclick="searchLiterature()" data-i18n="literature.search">Search</button>
+                </div>
+                <div class="lit-status connected" id="lit-status">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    <span data-i18n="literature.connected">Connected to arXiv-Pulse</span>
+                </div>
+                <div id="literature-results"></div>
             </div>
         </div>
-        
-        <div class="ai-context-menu" id="ai-context-menu">
-            <button onclick="aiPolish()">Polish</button>
-            <button onclick="aiTranslate('en')">EN</button>
-            <button onclick="aiTranslate('zh')">ZH</button>
-            <button onclick="aiExplain()">Explain</button>
-        </div>
-        
-        <div class="literature-panel" id="literature-panel">
-            <div class="literature-panel-header">
-                <span>Literature Search</span>
-                <button class="btn-icon" onclick="toggleLiteraturePanel()">×</button>
-            </div>
-            <div class="literature-search">
-                <input type="text" id="literature-search-input" placeholder="Search arXiv..." onkeydown="if(event.key==='Enter')searchLiterature()">
-                <button class="btn btn-primary" onclick="searchLiterature()">Search</button>
-            </div>
-            <div class="literature-status" id="literature-status"></div>
-            <div class="literature-results" id="literature-results"></div>
-        </div>
-        
-        <div class="diagram-panel" id="diagram-panel">
-            <div class="diagram-panel-header">
-                <span>Diagram Workshop</span>
-                <button class="btn-icon" onclick="toggleDiagramPanel()">×</button>
+
+        <div class="slide-panel wide" id="diagram-panel">
+            <div class="panel-header">
+                <span class="panel-title">
+                    <svg style="color:var(--accent-warning)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                        <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                        <path d="M2 2l7.586 7.586"/>
+                        <circle cx="11" cy="11" r="2"/>
+                    </svg>
+                    <span data-i18n="diagram.title">Diagram Workshop</span>
+                </span>
+                <button class="panel-close" onclick="togglePanel('diagram')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
             <div class="diagram-toolbar">
-                <button class="tool-btn active" data-tool="pen" onclick="setDiagramTool('pen')">✏️</button>
-                <button class="tool-btn" data-tool="line" onclick="setDiagramTool('line')">📏</button>
-                <button class="tool-btn" data-tool="rect" onclick="setDiagramTool('rect')">⬜</button>
-                <button class="tool-btn" data-tool="circle" onclick="setDiagramTool('circle')">⭕</button>
-                <button class="tool-btn" data-tool="arrow" onclick="setDiagramTool('arrow')">➡️</button>
-                <button class="tool-btn" data-tool="text" onclick="setDiagramTool('text')">📝</button>
-                <input type="color" id="diagram-color" value="#333333" title="Color">
-                <select id="diagram-line-width">
-                    <option value="1">Thin</option>
-                    <option value="2" selected>Normal</option>
-                    <option value="4">Thick</option>
+                <button class="diagram-tool active" data-tool="pen" onclick="setDiagramTool('pen')" title="Pen">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                        <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                    </svg>
+                </button>
+                <button class="diagram-tool" data-tool="line" onclick="setDiagramTool('line')" title="Line">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="5" y1="19" x2="19" y2="5"/>
+                    </svg>
+                </button>
+                <button class="diagram-tool" data-tool="rect" onclick="setDiagramTool('rect')" title="Rectangle">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    </svg>
+                </button>
+                <button class="diagram-tool" data-tool="circle" onclick="setDiagramTool('circle')" title="Circle">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                    </svg>
+                </button>
+                <button class="diagram-tool" data-tool="arrow" onclick="setDiagramTool('arrow')" title="Arrow">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                        <polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                </button>
+                <button class="diagram-tool" data-tool="text" onclick="setDiagramTool('text')" title="Text">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="4 7 4 4 20 4 20 7"/>
+                        <line x1="9" y1="20" x2="15" y2="20"/>
+                        <line x1="12" y1="4" x2="12" y2="20"/>
+                    </svg>
+                </button>
+                <input type="color" class="diagram-color" id="diagram-color" value="#333333" title="Color">
+                <select class="select" id="diagram-line-width" style="width:80px">
+                    <option value="1" data-i18n="diagram.lineWidth.thin">Thin</option>
+                    <option value="2" selected data-i18n="diagram.lineWidth.normal">Normal</option>
+                    <option value="4" data-i18n="diagram.lineWidth.thick">Thick</option>
                 </select>
-                <button class="btn btn-secondary" onclick="clearDiagramCanvas()">Clear</button>
+                <button class="btn btn-secondary btn-sm" onclick="clearDiagramCanvas()" data-i18n="diagram.clear">Clear</button>
             </div>
             <div class="diagram-canvas-wrapper">
                 <canvas id="diagram-canvas"></canvas>
             </div>
             <div class="diagram-actions">
-                <select id="diagram-style">
-                    <option value="nature">Nature Style</option>
-                    <option value="science">Science Style</option>
-                    <option value="ieee">IEEE Style</option>
-                    <option value="minimal">Minimal</option>
+                <select class="select" id="diagram-style" style="width:120px">
+                    <option value="nature" data-i18n="diagram.styles.nature">Nature Style</option>
+                    <option value="science" data-i18n="diagram.styles.science">Science Style</option>
+                    <option value="ieee" data-i18n="diagram.styles.ieee">IEEE Style</option>
+                    <option value="minimal" data-i18n="diagram.styles.minimal">Minimal</option>
                 </select>
-                <input type="text" id="diagram-prompt" placeholder="Describe diagram or modifications...">
-                <button class="btn btn-secondary" onclick="generateDiagramFromText()">Generate</button>
-                <button class="btn btn-primary" onclick="refineDiagramSketch()">Refine</button>
+                <input type="text" class="input" id="diagram-prompt" data-i18n-placeholder="diagram.promptPlaceholder" placeholder="Describe diagram or modifications...">
+                <button class="btn btn-secondary" onclick="generateDiagramFromText()" data-i18n="diagram.generate">Generate</button>
+                <button class="btn btn-primary" onclick="refineDiagramSketch()" data-i18n="diagram.refine">Refine</button>
             </div>
             <div class="diagram-preview" id="diagram-preview"></div>
             <div class="diagram-export">
-                <button class="btn btn-secondary" onclick="exportDiagramSVG()">Export SVG</button>
-                <button class="btn btn-secondary" onclick="exportDiagramTikZ()">Export TikZ</button>
-                <button class="btn btn-primary" onclick="insertDiagramToPaper()">Insert to Paper</button>
+                <button class="btn btn-secondary" onclick="exportDiagramSVG()" data-i18n="diagram.exportSvg">Export SVG</button>
+                <button class="btn btn-secondary" onclick="exportDiagramTikZ()" data-i18n="diagram.exportTikz">Export TikZ</button>
+                <button class="btn btn-primary" onclick="insertDiagramToPaper()" data-i18n="diagram.insertToPaper">Insert to Paper</button>
+            </div>
+        </div>
+
+        <div class="context-menu" id="ai-context-menu">
+            <div class="context-menu-item" onclick="aiAction('polish')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+                <span data-i18n="ai.contextMenu.polish">Polish</span>
+            </div>
+            <div class="context-menu-item" onclick="aiAction('translate-en')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+                </svg>
+                <span data-i18n="ai.contextMenu.toEnglish">To English</span>
+            </div>
+            <div class="context-menu-item" onclick="aiAction('translate-zh')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+                </svg>
+                <span data-i18n="ai.contextMenu.toChinese">To Chinese</span>
+            </div>
+            <div class="context-menu-divider"></div>
+            <div class="context-menu-item" onclick="aiAction('explain')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <span data-i18n="ai.contextMenu.explain">Explain</span>
             </div>
         </div>
     </div>
-    
+
+    <script src="/js/i18n.js"></script>
     <script src="/libs/pdfjs/pdf.min.js"></script>
     <script src="/libs/vs/loader.js"></script>
-    <script src="/js/editor.js"></script>
+    <script>
+        let projectId = null;
+        let editor = null;
+        let currentFile = null;
+        let pdfDoc = null;
+        let currentPage = 1;
+        let zoom = 1;
+        let openPanel = null;
+        let aiMode = 'chat';
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            await initI18n();
+            projectId = new URLSearchParams(window.location.search).get('id');
+            if (!projectId) {
+                window.location.href = '/';
+                return;
+            }
+            
+            pdfjsLib.GlobalWorkerOptions.workerSrc = '/libs/pdfjs/pdf.worker.min.js';
+            
+            await loadProject();
+            initMonaco();
+            initDiagramCanvas();
+            loadSettings();
+        });
+
+        async function loadProject() {
+            try {
+                const res = await fetch(`/api/projects/${projectId}`);
+                const project = await res.json();
+                document.getElementById('project-name').textContent = project.name;
+                document.title = `${project.name} - Pulse-TeX`;
+                await loadFiles();
+            } catch (e) {
+                console.error('Failed to load project:', e);
+            }
+        }
+
+        async function loadFiles() {
+            try {
+                const res = await fetch(`/api/files/${projectId}`);
+                const files = await res.json();
+                renderFileTree(files);
+                if (files.length > 0) {
+                    const mainFile = files.find(f => f.path === 'main.tex') || files[0];
+                    openFile(mainFile.path);
+                }
+            } catch (e) {
+                console.error('Failed to load files:', e);
+            }
+        }
+
+        function renderFileTree(files) {
+            const tree = document.getElementById('file-tree');
+            tree.innerHTML = files.map(f => `
+                <li class="file-item ${f.path === currentFile ? 'active' : ''}" onclick="openFile('${escapeHtml(f.path)}')" data-file-path="${escapeHtml(f.path)}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                        <path d="M14 2v6h6"/>
+                    </svg>
+                    <span class="file-name">${escapeHtml(f.path)}</span>
+                    <div class="file-actions">
+                        <button class="file-action-btn" onclick="event.stopPropagation();deleteFile('${escapeHtml(f.path)}')" title="Delete">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                            </svg>
+                        </button>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        async function openFile(path) {
+            if (editor && currentFile) {
+                await saveCurrentFile();
+            }
+            
+            try {
+                const res = await fetch(`/api/files/${projectId}/${encodeURIComponent(path)}`);
+                const file = await res.json();
+                currentFile = path;
+                
+                document.querySelectorAll('.file-item').forEach(el => {
+                    el.classList.toggle('active', el.dataset.filePath === path);
+                });
+                
+                if (editor) {
+                    editor.setValue(file.content || '');
+                }
+                
+                if (path.endsWith('.tex')) {
+                    loadPDF();
+                }
+            } catch (e) {
+                console.error('Failed to open file:', e);
+            }
+        }
+
+        function initMonaco() {
+            require.config({ paths: { 'vs': '/libs/vs' }});
+            require(['vs/editor/editor.main'], function() {
+                editor = monaco.editor.create(document.getElementById('editor-container'), {
+                    value: '',
+                    language: 'latex',
+                    theme: 'vs-dark',
+                    automaticLayout: true,
+                    fontSize: 14,
+                    fontFamily: 'JetBrains Mono, Consolas, monospace',
+                    minimap: { enabled: false },
+                    lineNumbers: 'on',
+                    wordWrap: 'on',
+                    tabSize: 2
+                });
+                
+                editor.onDidChangeModelContent(() => {
+                    if (currentFile) {
+                        const projectNameEl = document.getElementById('project-name');
+                        const baseName = projectNameEl.textContent.replace(' *', '');
+                        projectNameEl.textContent = baseName + ' *';
+                    }
+                });
+                
+                editor.onDidChangeCursorPosition(e => {
+                    if (pdfDoc && currentFile) {
+                        syncToPDF(e.position.lineNumber);
+                    }
+                });
+                
+                loadProject();
+            });
+        }
+
+        async function saveCurrentFile() {
+            if (!editor || !currentFile) return;
+            
+            const content = editor.getValue();
+            
+            try {
+                await fetch(`/api/files/${projectId}/${encodeURIComponent(currentFile)}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content })
+                });
+                const projectNameEl = document.getElementById('project-name');
+                const baseName = projectNameEl.textContent.replace(' *', '');
+                projectNameEl.textContent = baseName;
+            } catch (e) {
+                console.error('Failed to save file:', e);
+            }
+        }
+
+        async function createNewFile() {
+            const path = prompt(t('editor.newFileName') || 'File name:', 'untitled.tex');
+            if (!path) return;
+            
+            try {
+                const res = await fetch(`/api/files/${projectId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path, content: '' })
+                });
+                const file = await res.json();
+                await loadFiles();
+                openFile(file.path);
+            } catch (e) {
+                console.error('Failed to create file:', e);
+            }
+        }
+
+        async function deleteFile(path) {
+            if (!confirm(t('index.confirmDelete') || 'Are you sure?')) return;
+            
+            try {
+                await fetch(`/api/files/${projectId}/${encodeURIComponent(path)}`, { method: 'DELETE' });
+                await loadFiles();
+            } catch (e) {
+                console.error('Failed to delete file:', e);
+            }
+        }
+
+        async function compileProject() {
+            const btn = document.getElementById('compile-btn');
+            const status = document.getElementById('compile-status');
+            
+            btn.disabled = true;
+            status.className = 'compile-status loading';
+            status.textContent = t('editor.compiling') || 'Compiling...';
+            
+            try {
+                await saveCurrentFile();
+                
+                const res = await fetch(`/api/compile/${projectId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ file_id: currentFile?.id })
+                });
+                const result = await res.json();
+                
+                if (result.success) {
+                    status.className = 'compile-status success';
+                    status.textContent = t('editor.compileSuccess') || 'Compiled successfully';
+                    loadPDF();
+                } else {
+                    status.className = 'compile-status error';
+                    status.textContent = t('editor.compileError') || 'Compilation failed';
+                    showErrorLog(result.log);
+                }
+            } catch (e) {
+                status.className = 'compile-status error';
+                status.textContent = e.message;
+            }
+            
+            btn.disabled = false;
+        }
+
+        function showErrorLog(log) {
+            const panel = document.getElementById('error-panel');
+            const logEl = document.getElementById('error-log');
+            logEl.textContent = log || '';
+            panel.classList.add('visible');
+        }
+
+        function toggleErrorPanel() {
+            document.getElementById('error-panel').classList.toggle('visible');
+        }
+
+        async function loadPDF() {
+            try {
+                const res = await fetch(`/api/compile/${projectId}/pdf`);
+                if (!res.ok) return;
+                
+                const arrayBuffer = await res.arrayBuffer();
+                pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                
+                document.getElementById('total-pages').textContent = pdfDoc.numPages;
+                renderPage(1);
+            } catch (e) {
+                console.error('Failed to load PDF:', e);
+            }
+        }
+
+        function renderPage(pageNum) {
+            if (!pdfDoc) return;
+            
+            pdfDoc.getPage(pageNum).then(page => {
+                const canvas = document.getElementById('pdf-canvas');
+                const ctx = canvas.getContext('2d');
+                
+                const viewport = page.getViewport({ scale: zoom * 1.5 });
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                
+                page.render({ canvasContext: ctx, viewport });
+                
+                currentPage = pageNum;
+                document.getElementById('current-page').textContent = pageNum;
+            });
+        }
+
+        function prevPage() {
+            if (currentPage > 1) renderPage(currentPage - 1);
+        }
+
+        function nextPage() {
+            if (pdfDoc && currentPage < pdfDoc.numPages) renderPage(currentPage + 1);
+        }
+
+        function setZoom(value) {
+            zoom = value / 100;
+            if (pdfDoc) renderPage(currentPage);
+        }
+
+        function refreshPreview() {
+            if (pdfDoc) renderPage(currentPage);
+        }
+
+        function downloadPdf() {
+            window.location.href = `/api/compile/${projectId}/pdf`;
+        }
+
+        async function syncToPDF(line) {
+            if (!currentFile) return;
+            try {
+                const res = await fetch(`/api/compile/${projectId}/synctex?line=${line}&file=${encodeURIComponent(currentFile)}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.page) renderPage(data.page);
+                }
+            } catch (e) {}
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+        }
+
+        function togglePanel(name) {
+            const panels = ['ai', 'literature', 'diagram'];
+            panels.forEach(p => {
+                const panel = document.getElementById(`${p}-panel`);
+                const toggle = document.getElementById(`${p}-toggle`);
+                
+                if (p === name) {
+                    panel.classList.toggle('visible');
+                    toggle.classList.toggle('active', panel.classList.contains('visible'));
+                    openPanel = panel.classList.contains('visible') ? name : null;
+                } else {
+                    panel.classList.remove('visible');
+                    toggle.classList.remove('active');
+                }
+            });
+        }
+
+        function setAIMode(mode) {
+            aiMode = mode;
+            document.querySelectorAll('.ai-tab').forEach(t => {
+                t.classList.toggle('active', t.dataset.mode === mode);
+            });
+        }
+
+        async function sendAIMessage() {
+            const input = document.getElementById('ai-input');
+            const chat = document.getElementById('ai-chat');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            chat.innerHTML += `<div class="ai-message user">${escapeHtml(message)}</div>`;
+            input.value = '';
+            
+            try {
+                const res = await fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message,
+                        mode: aiMode,
+                        context: editor?.getValue() || ''
+                    })
+                });
+                const data = await res.json();
+                chat.innerHTML += `<div class="ai-message assistant">${escapeHtml(data.response)}</div>`;
+                chat.scrollTop = chat.scrollHeight;
+            } catch (e) {
+                chat.innerHTML += `<div class="ai-message error">${e.message}</div>`;
+            }
+        }
+
+        async function searchLiterature() {
+            const input = document.getElementById('literature-search-input');
+            const results = document.getElementById('literature-results');
+            const query = input.value.trim();
+            
+            if (!query) return;
+            
+            results.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+            
+            try {
+                const res = await fetch(`/api/literature/search?q=${encodeURIComponent(query)}`);
+                const papers = await res.json();
+                
+                results.innerHTML = papers.map(p => `
+                    <div class="lit-paper" onclick="viewPaper('${p.arxiv_id}')">
+                        <div class="lit-paper-title">${escapeHtml(p.title)}</div>
+                        <div class="lit-paper-authors">${escapeHtml(p.authors?.slice(0, 3).join(', ') || '')}${p.authors?.length > 3 ? ' et al.' : ''}</div>
+                        <div class="lit-paper-actions">
+                            <button onclick="event.stopPropagation();insertCitation('${p.arxiv_id}')">${t('literature.insertCitation') || 'Cite'}</button>
+                            <button onclick="event.stopPropagation();copyBibtex('${p.arxiv_id}')">${t('literature.copyBibtex') || 'BibTeX'}</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                results.innerHTML = `<div class="text-muted">${t('literature.noResults') || 'No results'}</div>`;
+            }
+        }
+
+        async function insertCitation(arxivId) {
+            const citation = `\\cite{${arxivId}}`;
+            editor?.trigger('keyboard', 'type', { text: citation });
+        }
+
+        async function copyBibtex(arxivId) {
+            try {
+                const res = await fetch(`/api/literature/citation/${arxivId}`);
+                const data = await res.json();
+                navigator.clipboard.writeText(data.bibtex);
+            } catch (e) {}
+        }
+
+        let diagramTool = 'pen';
+        let diagramCtx = null;
+        let isDrawing = false;
+        let startX, startY;
+
+        function initDiagramCanvas() {
+            const canvas = document.getElementById('diagram-canvas');
+            diagramCtx = canvas.getContext('2d');
+            
+            const resize = () => {
+                const rect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = rect.width;
+                canvas.height = rect.height;
+                diagramCtx.fillStyle = '#fff';
+                diagramCtx.fillRect(0, 0, canvas.width, canvas.height);
+            };
+            
+            resize();
+            window.addEventListener('resize', resize);
+            
+            canvas.addEventListener('mousedown', startDraw);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', endDraw);
+            canvas.addEventListener('mouseleave', endDraw);
+        }
+
+        function setDiagramTool(tool) {
+            diagramTool = tool;
+            document.querySelectorAll('.diagram-tool').forEach(t => {
+                t.classList.toggle('active', t.dataset.tool === tool);
+            });
+        }
+
+        function startDraw(e) {
+            isDrawing = true;
+            const rect = e.target.getBoundingClientRect();
+            startX = e.clientX - rect.left;
+            startY = e.clientY - rect.top;
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            
+            const rect = e.target.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const color = document.getElementById('diagram-color').value;
+            const width = parseInt(document.getElementById('diagram-line-width').value);
+            
+            diagramCtx.strokeStyle = color;
+            diagramCtx.lineWidth = width;
+            diagramCtx.lineCap = 'round';
+            
+            if (diagramTool === 'pen') {
+                diagramCtx.beginPath();
+                diagramCtx.moveTo(startX, startY);
+                diagramCtx.lineTo(x, y);
+                diagramCtx.stroke();
+                startX = x;
+                startY = y;
+            }
+        }
+
+        function endDraw(e) {
+            if (!isDrawing) return;
+            isDrawing = false;
+            
+            const rect = e.target.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const color = document.getElementById('diagram-color').value;
+            const width = parseInt(document.getElementById('diagram-line-width').value);
+            
+            diagramCtx.strokeStyle = color;
+            diagramCtx.lineWidth = width;
+            
+            if (diagramTool === 'line') {
+                diagramCtx.beginPath();
+                diagramCtx.moveTo(startX, startY);
+                diagramCtx.lineTo(x, y);
+                diagramCtx.stroke();
+            } else if (diagramTool === 'rect') {
+                diagramCtx.strokeRect(startX, startY, x - startX, y - startY);
+            } else if (diagramTool === 'circle') {
+                const r = Math.sqrt(Math.pow(x - startX, 2) + Math.pow(y - startY, 2));
+                diagramCtx.beginPath();
+                diagramCtx.arc(startX, startY, r, 0, 2 * Math.PI);
+                diagramCtx.stroke();
+            } else if (diagramTool === 'arrow') {
+                diagramCtx.beginPath();
+                diagramCtx.moveTo(startX, startY);
+                diagramCtx.lineTo(x, y);
+                diagramCtx.stroke();
+            }
+        }
+
+        function clearDiagramCanvas() {
+            const canvas = document.getElementById('diagram-canvas');
+            diagramCtx.fillStyle = '#fff';
+            diagramCtx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        async function generateDiagramFromText() {
+            const prompt = document.getElementById('diagram-prompt').value;
+            const style = document.getElementById('diagram-style').value;
+            
+            if (!prompt) return;
+            
+            try {
+                const res = await fetch('/api/diagram/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt, style })
+                });
+                const data = await res.json();
+                if (data.svg) {
+                    document.getElementById('diagram-preview').innerHTML = data.svg;
+                    document.getElementById('diagram-preview').classList.add('visible');
+                }
+            } catch (e) {}
+        }
+
+        async function refineDiagramSketch() {
+            const canvas = document.getElementById('diagram-canvas');
+            const style = document.getElementById('diagram-style').value;
+            const prompt = document.getElementById('diagram-prompt').value;
+            const imageData = canvas.toDataURL();
+            
+            try {
+                const res = await fetch('/api/diagram/refine', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: imageData, style, prompt })
+                });
+                const data = await res.json();
+                if (data.svg) {
+                    document.getElementById('diagram-preview').innerHTML = data.svg;
+                    document.getElementById('diagram-preview').classList.add('visible');
+                }
+            } catch (e) {}
+        }
+
+        function exportDiagramSVG() {
+            const svg = document.getElementById('diagram-preview').innerHTML;
+            if (!svg) return;
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'diagram.svg';
+            a.click();
+        }
+
+        async function exportDiagramTikZ() {
+            const svg = document.getElementById('diagram-preview').innerHTML;
+            if (!svg) return;
+            
+            try {
+                const res = await fetch('/api/diagram/svg-to-tikz', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ svg })
+                });
+                const data = await res.json();
+                if (data.tikz) {
+                    navigator.clipboard.writeText(data.tikz);
+                }
+            } catch (e) {}
+        }
+
+        function insertDiagramToPaper() {
+            const svg = document.getElementById('diagram-preview').querySelector('svg');
+            if (!svg) return;
+            
+            const figure = `
+\\begin{figure}[htbp]
+\\centering
+\\includegraphics[width=0.8\\textwidth]{diagram.pdf}
+\\caption{Figure caption}
+\\label{fig:diagram}
+\\end{figure}`;
+            editor?.trigger('keyboard', 'type', { text: figure });
+        }
+
+        document.addEventListener('contextmenu', e => {
+            if (e.target.closest('.editor-container')) {
+                e.preventDefault();
+                const menu = document.getElementById('ai-context-menu');
+                menu.style.left = e.clientX + 'px';
+                menu.style.top = e.clientY + 'px';
+                menu.classList.add('visible');
+            }
+        });
+
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.context-menu')) {
+                document.getElementById('ai-context-menu').classList.remove('visible');
+            }
+        });
+
+        async function aiAction(action) {
+            const selection = editor?.getModel().getValueInRange(editor.getSelection());
+            if (!selection) return;
+            
+            document.getElementById('ai-context-menu').classList.remove('visible');
+            togglePanel('ai');
+            
+            const chat = document.getElementById('ai-chat');
+            chat.innerHTML += `<div class="ai-message user">${t('ai.contextMenu.' + action.replace('-', '')) || action}: "${selection.slice(0, 50)}..."</div>`;
+            
+            try {
+                const res = await fetch('/api/ai/' + (action.startsWith('translate') ? 'translate' : action), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: selection,
+                        target_lang: action === 'translate-en' ? 'en' : action === 'translate-zh' ? 'zh' : undefined
+                    })
+                });
+                const data = await res.json();
+                
+                if (action === 'polish' || action.startsWith('translate')) {
+                    editor?.executeEdits('', [{
+                        range: editor.getSelection(),
+                        text: data.result
+                    }]);
+                }
+                
+                chat.innerHTML += `<div class="ai-message assistant">${escapeHtml(data.result || data.response)}</div>`;
+                chat.scrollTop = chat.scrollHeight;
+            } catch (e) {
+                chat.innerHTML += `<div class="ai-message error">${e.message}</div>`;
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function openSettingsFromEditor() {
+            window.open('/', '_blank');
+        }
+
+        async function loadSettings() {
+            try {
+                const res = await fetch('/api/config');
+                const config = await res.json();
+                if (config.language) setLanguage(config.language);
+                if (config.theme) setTheme(config.theme);
+            } catch (e) {}
+        }
+
+        document.addEventListener('keydown', e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                compileProject();
+            }
+        });
+    </script>
 </body>
 </html>

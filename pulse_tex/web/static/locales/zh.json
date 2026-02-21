@@ -1,0 +1,216 @@
+{
+  "app": {
+    "name": "Pulse-TeX",
+    "tagline": "AI 驱动的 LaTeX 写作工具"
+  },
+  "nav": {
+    "projects": "项目",
+    "templates": "模板",
+    "settings": "设置",
+    "home": "首页"
+  },
+  "index": {
+    "welcome": "欢迎回来",
+    "readyToWrite": "准备好写下一篇论文了吗？",
+    "recentProjects": "最近项目",
+    "newProject": "新建项目",
+    "noProjects": "暂无项目",
+    "createFirst": "创建第一个项目",
+    "lastEdited": "最后编辑",
+    "open": "打开",
+    "export": "导出",
+    "delete": "删除",
+    "confirmDelete": "确定要删除此项目吗？",
+    "quickTools": "快捷工具",
+    "diagramWorkbench": "示意图工作台",
+    "diagramDesc": "创建期刊级配图",
+    "templateGallery": "模板库",
+    "templateDesc": "从预设模板开始",
+    "settings": "设置",
+    "settingsDesc": "配置您的偏好"
+  },
+  "editor": {
+    "files": "文件",
+    "newFile": "新建文件",
+    "compile": "编译",
+    "save": "保存",
+    "preview": "预览",
+    "refresh": "刷新",
+    "page": "页",
+    "zoom": "缩放",
+    "compiling": "编译中...",
+    "compileSuccess": "编译成功",
+    "compileError": "编译失败",
+    "saved": "已保存",
+    "saving": "保存中...",
+    "unsaved": "未保存更改",
+    "untitled": "未命名",
+    "downloadPdf": "下载 PDF",
+    "syncTeX": "SyncTeX 同步",
+    "line": "行"
+  },
+  "ai": {
+    "title": "AI 助手",
+    "chat": "对话",
+    "polish": "润色",
+    "translate": "翻译",
+    "explain": "解释错误",
+    "placeholder": "向 AI 提问...",
+    "send": "发送",
+    "generating": "生成中...",
+    "modes": {
+      "chat": "对话",
+      "polish": "润色文本",
+      "translate": "翻译",
+      "tikz": "生成 TikZ",
+      "plot": "生成图表"
+    },
+    "contextMenu": {
+      "polish": "润色",
+      "toEnglish": "译为英文",
+      "toChinese": "译为中文",
+      "explain": "解释"
+    }
+  },
+  "literature": {
+    "title": "文献搜索",
+    "placeholder": "搜索 arXiv...",
+    "search": "搜索",
+    "status": "状态",
+    "connected": "已连接 arXiv-Pulse",
+    "disconnected": "未连接",
+    "connecting": "连接中...",
+    "noResults": "未找到结果",
+    "insertCitation": "引用",
+    "copyBibtex": "复制 BibTeX",
+    "viewPaper": "查看论文",
+    "authors": "作者",
+    "published": "发布日期",
+    "summary": "摘要"
+  },
+  "diagram": {
+    "title": "示意图工作台",
+    "tools": {
+      "pen": "画笔",
+      "line": "直线",
+      "rect": "矩形",
+      "circle": "圆形",
+      "arrow": "箭头",
+      "text": "文字"
+    },
+    "lineWidth": {
+      "thin": "细",
+      "normal": "中",
+      "thick": "粗"
+    },
+    "clear": "清空",
+    "style": "风格",
+    "styles": {
+      "nature": "Nature 风格",
+      "science": "Science 风格",
+      "ieee": "IEEE 风格",
+      "minimal": "极简风格"
+    },
+    "promptPlaceholder": "描述示意图或修改要求...",
+    "generate": "生成",
+    "refine": "优化",
+    "exportSvg": "导出 SVG",
+    "exportTikz": "导出 TikZ",
+    "insertToPaper": "插入论文"
+  },
+  "settings": {
+    "title": "设置",
+    "tabs": {
+      "general": "常规",
+      "editor": "编辑器",
+      "ai": "AI 服务",
+      "latex": "LaTeX",
+      "about": "关于"
+    },
+    "general": {
+      "language": "语言",
+      "theme": "主题",
+      "themes": {
+        "dark": "深色",
+        "light": "浅色",
+        "system": "跟随系统"
+      }
+    },
+    "editor": {
+      "fontSize": "字体大小",
+      "tabSize": "Tab 宽度",
+      "wordWrap": "自动换行",
+      "minimap": "显示缩略图",
+      "lineNumbers": "显示行号"
+    },
+    "ai": {
+      "apiUrl": "API 地址",
+      "apiKey": "API 密钥",
+      "model": "模型",
+      "testConnection": "测试连接",
+      "connectionSuccess": "连接成功",
+      "connectionFailed": "连接失败"
+    },
+    "latex": {
+      "engine": "LaTeX 引擎",
+      "bibtexEngine": "BibTeX 引擎",
+      "autoCompile": "自动编译",
+      "syncTex": "启用 SyncTeX"
+    },
+    "about": {
+      "version": "版本",
+      "description": "面向学术研究者的 AI 驱动 LaTeX 论文写作工具。",
+      "documentation": "文档",
+      "github": "GitHub",
+      "reportIssue": "报告问题"
+    },
+    "save": "保存",
+    "cancel": "取消",
+    "saved": "设置已保存"
+  },
+  "setup": {
+    "title": "欢迎使用 Pulse-TeX",
+    "subtitle": "让我们开始配置环境",
+    "step1Title": "选择 LaTeX 引擎",
+    "step1Desc": "选择用于编译 LaTeX 文档的引擎",
+    "step2Title": "选择 BibTeX 引擎",
+    "step2Desc": "用于处理参考文献引用",
+    "step3Title": "配置 AI 服务",
+    "step3Desc": "设置 AI 用于智能写作辅助",
+    "step4Title": "准备就绪！",
+    "step4Desc": "确认您的配置",
+    "installed": "已安装",
+    "notInstalled": "未安装",
+    "clickToInstall": "点击查看安装指南",
+    "next": "下一步",
+    "back": "上一步",
+    "finish": "完成配置",
+    "testConnection": "测试连接",
+    "connectionSuccess": "连接成功！",
+    "connectionFailed": "连接失败",
+    "summary": {
+      "engine": "LaTeX 引擎",
+      "bibtex": "BibTeX 引擎",
+      "aiService": "AI 服务",
+      "model": "AI 模型"
+    }
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "cancel": "取消",
+    "confirm": "确认",
+    "close": "关闭",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "copy": "复制",
+    "copied": "已复制！",
+    "search": "搜索",
+    "filter": "筛选",
+    "sort": "排序",
+    "download": "下载",
+    "upload": "上传"
+  }
+}
