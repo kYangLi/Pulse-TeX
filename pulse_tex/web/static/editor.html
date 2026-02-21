@@ -1349,12 +1349,19 @@
         }
 
         function togglePanel(name) {
-            const panels = ['ai', 'literature', 'diagram'];
-            panels.forEach(p => {
-                const panel = document.getElementById(`${p}-panel`);
-                const toggle = document.getElementById(`${p}-toggle`);
+            const panelMap = {
+                'ai': { panel: 'ai-panel', toggle: 'ai-toggle' },
+                'literature': { panel: 'literature-panel', toggle: 'lit-toggle' },
+                'diagram': { panel: 'diagram-panel', toggle: 'diagram-toggle' }
+            };
+            
+            Object.entries(panelMap).forEach(([key, ids]) => {
+                const panel = document.getElementById(ids.panel);
+                const toggle = document.getElementById(ids.toggle);
                 
-                if (p === name) {
+                if (!panel || !toggle) return;
+                
+                if (key === name) {
                     panel.classList.toggle('visible');
                     toggle.classList.toggle('active', panel.classList.contains('visible'));
                     openPanel = panel.classList.contains('visible') ? name : null;
