@@ -211,6 +211,10 @@
     "filter": "Filter",
     "sort": "Sort",
     "download": "Download",
-    "upload": "Upload"
+    "upload": "Upload",
+    "justNow": "Just now",
+    "minutesAgo": "min ago",
+    "hoursAgo": "hours ago",
+    "daysAgo": "days ago"
   }
 }
