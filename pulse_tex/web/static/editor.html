@@ -1142,10 +1142,6 @@
                 if (editor) {
                     editor.setValue(file.content || '');
                 }
-                
-                if (path.endsWith('.tex')) {
-                    loadPDF();
-                }
             } catch (e) {
                 console.error('Failed to open file:', e);
             }
@@ -1245,9 +1241,7 @@
                 await saveCurrentFile();
                 
                 const res = await fetch(`/api/compile/${projectId}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ file_id: currentFile?.id })
+                    method: 'POST'
                 });
                 const result = await res.json();
                 
@@ -1290,7 +1284,7 @@
                 document.getElementById('total-pages').textContent = pdfDoc.numPages;
                 renderPage(1);
             } catch (e) {
-                console.error('Failed to load PDF:', e);
+                // PDF not available yet, silently ignore
             }
         }
 
