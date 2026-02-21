@@ -1,83 +1,343 @@
-let excalidrawAPI = null;
+let canvas = null;
+let ctx = null;
+let isDrawing = false;
+let currentTool = 'pen';
+let currentColor = '#333333';
+let lineWidth = 2;
+let startX = 0;
+let startY = 0;
+let paths = [];
+let currentPath = null;
+
 let currentSVG = null;
 let currentTikZ = null;
 let paperContext = null;
 let chatHistory = [];
 
-async function initExcalidraw() {
-    const container = document.getElementById('excalidraw-wrapper');
+function initCanvas() {
+    const container = document.getElementById('canvas-container');
     
-    const excalidrawWrapper = document.createElement('div');
-    excalidrawWrapper.style.width = '100%';
-    excalidrawWrapper.style.height = '100%';
-    container.appendChild(excalidrawWrapper);
-
-    const root = ReactDOM.createRoot(excalidrawWrapper);
+    canvas = document.createElement('canvas');
+    canvas.id = 'drawing-canvas';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.background = '#ffffff';
+    canvas.style.cursor = 'crosshair';
     
-    const App = () => {
-        const [excalidrawState, setExcalidrawState] = React.useState({
-            elements: [],
-            appState: { viewBackgroundColor: '#ffffff' },
-        });
-
-        const handleChange = React.useCallback((elements, appState) => {
-            setExcalidrawState({ elements, appState });
-        }, []);
-
-        React.useEffect(() => {
-            window.excalidrawGetElements = () => excalidrawState.elements;
-        }, [excalidrawState]);
-
-        return React.createElement(
-            window.Excalidraw.Excalidraw,
-            {
-                initialData: excalidrawState,
-                onChange: handleChange,
-                excalidrawAPI: (api) => {
-                    excalidrawAPI = api;
-                    window.excalidrawAPI = api;
-                },
-                UIOptions: {
-                    canvasActions: {
-                        loadScene: true,
-                        saveToActiveFile: false,
-                        export: { saveFileToDisk: false },
-                    },
-                },
-                langCode: 'en',
-            }
-        );
-    };
-
-    root.render(React.createElement(App));
+    container.appendChild(canvas);
+    
+    ctx = canvas.getContext('2d');
+    resizeCanvas();
+    
+    window.addEventListener('resize', resizeCanvas);
+    
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+    
+    canvas.addEventListener('touchstart', handleTouch);
+    canvas.addEventListener('touchmove', handleTouch);
+    canvas.addEventListener('touchend', stopDrawing);
+    
+    initToolbar();
 }
 
-async function getSketchSVG() {
-    if (!excalidrawAPI) return null;
+function resizeCanvas() {
+    const container = document.getElementById('canvas-container');
+    const rect = container.getBoundingClientRect();
     
-    const elements = excalidrawAPI.getSceneElements();
-    if (!elements || elements.length === 0) return null;
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    tempCanvas.getContext('2d').drawImage(canvas, 0, 0);
     
-    const appState = excalidrawAPI.getAppState();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
     
-    const svg = await excalidrawAPI.exportToSvg({
-        elements: elements,
-        appState: {
-            ...appState,
-            exportBackground: true,
-            viewBackgroundColor: '#ffffff',
-        },
-        files: excalidrawAPI.getFiles(),
+    ctx.drawImage(tempCanvas, 0, 0);
+    
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+}
+
+function initToolbar() {
+    const container = document.getElementById('canvas-container');
+    
+    const toolbar = document.createElement('div');
+    toolbar.className = 'canvas-toolbar';
+    toolbar.innerHTML = `
+        <button class="tool-btn active" data-tool="pen" title="Pen">✏️</button>
+        <button class="tool-btn" data-tool="line" title="Line">📏</button>
+        <button class="tool-btn" data-tool="rect" title="Rectangle">⬜</button>
+        <button class="tool-btn" data-tool="circle" title="Circle">⭕</button>
+        <button class="tool-btn" data-tool="arrow" title="Arrow">➡️</button>
+        <button class="tool-btn" data-tool="text" title="Text">📝</button>
+        <span class="tool-divider"></span>
+        <input type="color" id="color-picker" value="#333333" title="Color">
+        <select id="line-width" title="Line Width">
+            <option value="1">Thin</option>
+            <option value="2" selected>Normal</option>
+            <option value="4">Thick</option>
+            <option value="8">Bold</option>
+        </select>
+    `;
+    
+    toolbar.style.cssText = `
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        display: flex;
+        gap: 5px;
+        padding: 8px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        z-index: 10;
+    `;
+    
+    container.style.position = 'relative';
+    container.appendChild(toolbar);
+    
+    toolbar.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            toolbar.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentTool = btn.dataset.tool;
+        });
     });
     
-    return new XMLSerializer().serializeToString(svg);
+    document.getElementById('color-picker').addEventListener('input', (e) => {
+        currentColor = e.target.value;
+    });
+    
+    document.getElementById('line-width').addEventListener('change', (e) => {
+        lineWidth = parseInt(e.target.value);
+    });
+    
+    const style = document.createElement('style');
+    style.textContent = `
+        .tool-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .tool-btn:hover {
+            background: #e0e0e0;
+        }
+        .tool-btn.active {
+            background: #3498db;
+            color: #fff;
+        }
+        .tool-divider {
+            width: 1px;
+            background: #ddd;
+            margin: 0 5px;
+        }
+        #color-picker {
+            width: 32px;
+            height: 32px;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+        }
+        #line-width {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+function startDrawing(e) {
+    isDrawing = true;
+    const rect = canvas.getBoundingClientRect();
+    startX = e.clientX - rect.left;
+    startY = e.clientY - rect.top;
+    
+    if (currentTool === 'pen') {
+        currentPath = {
+            tool: 'pen',
+            color: currentColor,
+            width: lineWidth,
+            points: [{x: startX, y: startY}]
+        };
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.strokeStyle = currentColor;
+        ctx.lineWidth = lineWidth;
+    } else if (currentTool === 'text') {
+        const text = prompt('Enter text:');
+        if (text) {
+            ctx.font = `${lineWidth * 8}px Arial`;
+            ctx.fillStyle = currentColor;
+            ctx.fillText(text, startX, startY);
+            paths.push({
+                tool: 'text',
+                color: currentColor,
+                size: lineWidth * 8,
+                text: text,
+                x: startX,
+                y: startY
+            });
+        }
+        isDrawing = false;
+    }
+}
+
+function draw(e) {
+    if (!isDrawing) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    if (currentTool === 'pen') {
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        currentPath.points.push({x, y});
+    } else {
+        redrawCanvas();
+        drawShape(startX, startY, x, y);
+    }
+}
+
+function drawShape(x1, y1, x2, y2) {
+    ctx.strokeStyle = currentColor;
+    ctx.lineWidth = lineWidth;
+    
+    switch (currentTool) {
+        case 'line':
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+            break;
+        case 'rect':
+            ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+            break;
+        case 'circle':
+            const rx = (x2 - x1) / 2;
+            const ry = (y2 - y1) / 2;
+            const cx = x1 + rx;
+            const cy = y1 + ry;
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, Math.abs(rx), Math.abs(ry), 0, 0, 2 * Math.PI);
+            ctx.stroke();
+            break;
+        case 'arrow':
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            const headLen = 15;
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+            ctx.moveTo(x2, y2);
+            ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+            ctx.stroke();
+            break;
+    }
+}
+
+function stopDrawing(e) {
+    if (!isDrawing) return;
+    isDrawing = false;
+    
+    if (currentTool === 'pen' && currentPath) {
+        paths.push(currentPath);
+        currentPath = null;
+    } else if (['line', 'rect', 'circle', 'arrow'].includes(currentTool)) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        paths.push({
+            tool: currentTool,
+            color: currentColor,
+            width: lineWidth,
+            x1: startX,
+            y1: startY,
+            x2: x,
+            y2: y
+        });
+    }
+}
+
+function handleTouch(e) {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const mouseEvent = new MouseEvent(e.type === 'touchstart' ? 'mousedown' : 'mousemove', {
+        clientX: touch.clientX,
+        clientY: touch.clientY
+    });
+    canvas.dispatchEvent(mouseEvent);
+}
+
+function redrawCanvas() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    for (const path of paths) {
+        ctx.strokeStyle = path.color;
+        ctx.fillStyle = path.color;
+        ctx.lineWidth = path.width;
+        
+        switch (path.tool) {
+            case 'pen':
+                ctx.beginPath();
+                ctx.moveTo(path.points[0].x, path.points[0].y);
+                for (const point of path.points) {
+                    ctx.lineTo(point.x, point.y);
+                }
+                ctx.stroke();
+                break;
+            case 'text':
+                ctx.font = `${path.size}px Arial`;
+                ctx.fillText(path.text, path.x, path.y);
+                break;
+            case 'line':
+                ctx.beginPath();
+                ctx.moveTo(path.x1, path.y1);
+                ctx.lineTo(path.x2, path.y2);
+                ctx.stroke();
+                break;
+            case 'rect':
+                ctx.strokeRect(path.x1, path.y1, path.x2 - path.x1, path.y2 - path.y1);
+                break;
+            case 'circle':
+                const rx = (path.x2 - path.x1) / 2;
+                const ry = (path.y2 - path.y1) / 2;
+                ctx.beginPath();
+                ctx.ellipse(path.x1 + rx, path.y1 + ry, Math.abs(rx), Math.abs(ry), 0, 0, 2 * Math.PI);
+                ctx.stroke();
+                break;
+            case 'arrow':
+                const angle = Math.atan2(path.y2 - path.y1, path.x2 - path.x1);
+                const headLen = 15;
+                ctx.beginPath();
+                ctx.moveTo(path.x1, path.y1);
+                ctx.lineTo(path.x2, path.y2);
+                ctx.lineTo(path.x2 - headLen * Math.cos(angle - Math.PI / 6), path.y2 - headLen * Math.sin(angle - Math.PI / 6));
+                ctx.moveTo(path.x2, path.y2);
+                ctx.lineTo(path.x2 - headLen * Math.cos(angle + Math.PI / 6), path.y2 - headLen * Math.sin(angle + Math.PI / 6));
+                ctx.stroke();
+                break;
+        }
+    }
 }
 
 function clearCanvas() {
-    if (excalidrawAPI) {
-        excalidrawAPI.updateScene({ elements: [] });
-        excalidrawAPI.getAppState().viewBackgroundColor = '#ffffff';
+    if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
+    paths = [];
     currentSVG = null;
     currentTikZ = null;
     document.getElementById('preview-container').innerHTML = `
@@ -96,24 +356,73 @@ function clearCanvas() {
     `;
 }
 
+function getSketchSVG() {
+    if (!canvas || paths.length === 0) return null;
+    return canvasToSVG();
+}
+
+function canvasToSVG() {
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`;
+    svgContent += `<rect width="${width}" height="${height}" fill="white"/>`;
+    
+    for (const path of paths) {
+        switch (path.tool) {
+            case 'pen':
+                if (path.points.length > 0) {
+                    let d = `M ${path.points[0].x} ${path.points[0].y}`;
+                    for (let i = 1; i < path.points.length; i++) {
+                        d += ` L ${path.points[i].x} ${path.points[i].y}`;
+                    }
+                    svgContent += `<path d="${d}" stroke="${path.color}" stroke-width="${path.width}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+                }
+                break;
+            case 'text':
+                svgContent += `<text x="${path.x}" y="${path.y}" fill="${path.color}" font-size="${path.size}" font-family="Arial">${escapeXml(path.text)}</text>`;
+                break;
+            case 'line':
+                svgContent += `<line x1="${path.x1}" y1="${path.y1}" x2="${path.x2}" y2="${path.y2}" stroke="${path.color}" stroke-width="${path.width}"/>`;
+                break;
+            case 'rect':
+                svgContent += `<rect x="${Math.min(path.x1, path.x2)}" y="${Math.min(path.y1, path.y2)}" width="${Math.abs(path.x2 - path.x1)}" height="${Math.abs(path.y2 - path.y1)}" stroke="${path.color}" stroke-width="${path.width}" fill="none"/>`;
+                break;
+            case 'circle':
+                const rx = Math.abs(path.x2 - path.x1) / 2;
+                const ry = Math.abs(path.y2 - path.y1) / 2;
+                const cx = Math.min(path.x1, path.x2) + rx;
+                const cy = Math.min(path.y1, path.y2) + ry;
+                svgContent += `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" stroke="${path.color}" stroke-width="${path.width}" fill="none"/>`;
+                break;
+            case 'arrow':
+                const angle = Math.atan2(path.y2 - path.y1, path.x2 - path.x1);
+                const headLen = 15;
+                const p1x = path.x2 - headLen * Math.cos(angle - Math.PI / 6);
+                const p1y = path.y2 - headLen * Math.sin(angle - Math.PI / 6);
+                const p2x = path.x2 - headLen * Math.cos(angle + Math.PI / 6);
+                const p2y = path.y2 - headLen * Math.sin(angle + Math.PI / 6);
+                svgContent += `<line x1="${path.x1}" y1="${path.y1}" x2="${path.x2}" y2="${path.y2}" stroke="${path.color}" stroke-width="${path.width}"/>`;
+                svgContent += `<line x1="${path.x2}" y1="${path.y2}" x2="${p1x}" y2="${p1y}" stroke="${path.color}" stroke-width="${path.width}"/>`;
+                svgContent += `<line x1="${path.x2}" y1="${path.y2}" x2="${p2x}" y2="${p2y}" stroke="${path.color}" stroke-width="${path.width}"/>`;
+                break;
+        }
+    }
+    
+    svgContent += '</svg>';
+    return svgContent;
+}
+
+function escapeXml(text) {
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+
 function showLoading() {
     document.getElementById('loading-overlay').classList.add('visible');
 }
 
 function hideLoading() {
     document.getElementById('loading-overlay').classList.remove('visible');
-}
-
-function addChatMessage(content, type = 'user') {
-    const chat = document.getElementById('ai-chat');
-    const welcome = chat.querySelector('.ai-welcome');
-    if (welcome) welcome.remove();
-    
-    const msg = document.createElement('div');
-    msg.className = `ai-message ${type}`;
-    msg.textContent = content;
-    chat.appendChild(msg);
-    chat.scrollTop = chat.scrollHeight;
 }
 
 async function refineSketch() {
@@ -124,7 +433,7 @@ async function refineSketch() {
         return;
     }
 
-    const sketchSVG = await getSketchSVG();
+    const sketchSVG = getSketchSVG();
     if (!sketchSVG) {
         alert('Please draw something on the canvas first.');
         return;
@@ -420,4 +729,4 @@ document.getElementById('ai-input').addEventListener('keydown', (e) => {
     }
 });
 
-document.addEventListener('DOMContentLoaded', initExcalidraw);
+document.addEventListener('DOMContentLoaded', initCanvas);
