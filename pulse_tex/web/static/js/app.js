@@ -18,6 +18,7 @@ async function loadProjects() {
     try {
         const projects = await fetchAPI('/projects');
         const list = document.getElementById('project-list');
+        if (!list) return;
         list.innerHTML = projects.map(p => `
             <li>
                 <a href="/editor.html?id=${p.id}">${p.name}</a>
@@ -44,4 +45,5 @@ async function createProject() {
     }
 }
 
-document.addEventListener('DOMContentLoaded', loadProjects);
+// Load immediately since script is loaded after DOM ready
+loadProjects();

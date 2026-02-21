@@ -561,3 +561,439 @@ async function copyBibtex(arxivId, title, authors) {
         console.error('Failed to copy:', e);
     }
 }
+
+// ========== Diagram Workshop ==========
+
+let diagramCanvas = null;
+let diagramCtx = null;
+let diagramDrawing = false;
+let diagramTool = 'pen';
+let diagramColor = '#333333';
+let diagramLineWidth = 2;
+let diagramStartX = 0;
+let diagramStartY = 0;
+let diagramPaths = [];
+let diagramCurrentPath = null;
+let diagramCurrentSVG = null;
+
+function toggleDiagramPanel() {
+    const panel = document.getElementById('diagram-panel');
+    panel.classList.toggle('visible');
+    
+    if (panel.classList.contains('visible') && !diagramCanvas) {
+        initDiagramCanvas();
+    }
+}
+
+function initDiagramCanvas() {
+    const wrapper = document.getElementById('diagram-canvas').parentElement;
+    diagramCanvas = document.getElementById('diagram-canvas');
+    
+    const rect = wrapper.getBoundingClientRect();
+    diagramCanvas.width = rect.width;
+    diagramCanvas.height = rect.height;
+    
+    diagramCtx = diagramCanvas.getContext('2d');
+    diagramCtx.fillStyle = '#ffffff';
+    diagramCtx.fillRect(0, 0, diagramCanvas.width, diagramCanvas.height);
+    
+    diagramCanvas.addEventListener('mousedown', startDiagramDrawing);
+    diagramCanvas.addEventListener('mousemove', drawDiagram);
+    diagramCanvas.addEventListener('mouseup', stopDiagramDrawing);
+    diagramCanvas.addEventListener('mouseleave', stopDiagramDrawing);
+    
+    document.getElementById('diagram-color').addEventListener('input', (e) => {
+        diagramColor = e.target.value;
+    });
+    
+    document.getElementById('diagram-line-width').addEventListener('change', (e) => {
+        diagramLineWidth = parseInt(e.target.value);
+    });
+}
+
+function setDiagramTool(tool) {
+    diagramTool = tool;
+    document.querySelectorAll('.diagram-toolbar .tool-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tool === tool);
+    });
+}
+
+function getDiagramCoords(e) {
+    const rect = diagramCanvas.getBoundingClientRect();
+    return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+    };
+}
+
+function startDiagramDrawing(e) {
+    diagramDrawing = true;
+    const coords = getDiagramCoords(e);
+    diagramStartX = coords.x;
+    diagramStartY = coords.y;
+    
+    if (diagramTool === 'pen') {
+        diagramCurrentPath = {
+            tool: 'pen',
+            color: diagramColor,
+            width: diagramLineWidth,
+            points: [{x: coords.x, y: coords.y}]
+        };
+        diagramCtx.beginPath();
+        diagramCtx.moveTo(coords.x, coords.y);
+        diagramCtx.strokeStyle = diagramColor;
+        diagramCtx.lineWidth = diagramLineWidth;
+        diagramCtx.lineCap = 'round';
+    } else if (diagramTool === 'text') {
+        const text = prompt('Enter text:');
+        if (text) {
+            diagramCtx.font = `${diagramLineWidth * 6}px Arial`;
+            diagramCtx.fillStyle = diagramColor;
+            diagramCtx.fillText(text, coords.x, coords.y);
+            diagramPaths.push({
+                tool: 'text',
+                color: diagramColor,
+                size: diagramLineWidth * 6,
+                text: text,
+                x: coords.x,
+                y: coords.y
+            });
+        }
+        diagramDrawing = false;
+    }
+}
+
+function drawDiagram(e) {
+    if (!diagramDrawing) return;
+    
+    const coords = getDiagramCoords(e);
+    
+    if (diagramTool === 'pen') {
+        diagramCtx.lineTo(coords.x, coords.y);
+        diagramCtx.stroke();
+        diagramCurrentPath.points.push({x: coords.x, y: coords.y});
+    } else {
+        redrawDiagramCanvas();
+        drawDiagramShape(diagramStartX, diagramStartY, coords.x, coords.y);
+    }
+}
+
+function drawDiagramShape(x1, y1, x2, y2) {
+    diagramCtx.strokeStyle = diagramColor;
+    diagramCtx.lineWidth = diagramLineWidth;
+    diagramCtx.lineCap = 'round';
+    
+    switch (diagramTool) {
+        case 'line':
+            diagramCtx.beginPath();
+            diagramCtx.moveTo(x1, y1);
+            diagramCtx.lineTo(x2, y2);
+            diagramCtx.stroke();
+            break;
+        case 'rect':
+            diagramCtx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+            break;
+        case 'circle':
+            const rx = (x2 - x1) / 2;
+            const ry = (y2 - y1) / 2;
+            diagramCtx.beginPath();
+            diagramCtx.ellipse(x1 + rx, y1 + ry, Math.abs(rx), Math.abs(ry), 0, 0, 2 * Math.PI);
+            diagramCtx.stroke();
+            break;
+        case 'arrow':
+            const angle = Math.atan2(y2 - y1, x2 - x1);
+            const headLen = 12;
+            diagramCtx.beginPath();
+            diagramCtx.moveTo(x1, y1);
+            diagramCtx.lineTo(x2, y2);
+            diagramCtx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+            diagramCtx.moveTo(x2, y2);
+            diagramCtx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+            diagramCtx.stroke();
+            break;
+    }
+}
+
+function stopDiagramDrawing(e) {
+    if (!diagramDrawing) return;
+    diagramDrawing = false;
+    
+    if (diagramTool === 'pen' && diagramCurrentPath) {
+        diagramPaths.push(diagramCurrentPath);
+        diagramCurrentPath = null;
+    } else if (['line', 'rect', 'circle', 'arrow'].includes(diagramTool)) {
+        const coords = getDiagramCoords(e);
+        diagramPaths.push({
+            tool: diagramTool,
+            color: diagramColor,
+            width: diagramLineWidth,
+            x1: diagramStartX,
+            y1: diagramStartY,
+            x2: coords.x,
+            y2: coords.y
+        });
+    }
+}
+
+function redrawDiagramCanvas() {
+    diagramCtx.fillStyle = '#ffffff';
+    diagramCtx.fillRect(0, 0, diagramCanvas.width, diagramCanvas.height);
+    
+    for (const path of diagramPaths) {
+        diagramCtx.strokeStyle = path.color;
+        diagramCtx.fillStyle = path.color;
+        diagramCtx.lineWidth = path.width;
+        
+        switch (path.tool) {
+            case 'pen':
+                diagramCtx.beginPath();
+                diagramCtx.moveTo(path.points[0].x, path.points[0].y);
+                for (const pt of path.points) {
+                    diagramCtx.lineTo(pt.x, pt.y);
+                }
+                diagramCtx.stroke();
+                break;
+            case 'text':
+                diagramCtx.font = `${path.size}px Arial`;
+                diagramCtx.fillText(path.text, path.x, path.y);
+                break;
+            case 'line':
+                diagramCtx.beginPath();
+                diagramCtx.moveTo(path.x1, path.y1);
+                diagramCtx.lineTo(path.x2, path.y2);
+                diagramCtx.stroke();
+                break;
+            case 'rect':
+                diagramCtx.strokeRect(path.x1, path.y1, path.x2 - path.x1, path.y2 - path.y1);
+                break;
+            case 'circle':
+                const rx = (path.x2 - path.x1) / 2;
+                const ry = (path.y2 - path.y1) / 2;
+                diagramCtx.beginPath();
+                diagramCtx.ellipse(path.x1 + rx, path.y1 + ry, Math.abs(rx), Math.abs(ry), 0, 0, 2 * Math.PI);
+                diagramCtx.stroke();
+                break;
+            case 'arrow':
+                const angle = Math.atan2(path.y2 - path.y1, path.x2 - path.x1);
+                const headLen = 12;
+                diagramCtx.beginPath();
+                diagramCtx.moveTo(path.x1, path.y1);
+                diagramCtx.lineTo(path.x2, path.y2);
+                diagramCtx.lineTo(path.x2 - headLen * Math.cos(angle - Math.PI / 6), path.y2 - headLen * Math.sin(angle - Math.PI / 6));
+                diagramCtx.moveTo(path.x2, path.y2);
+                diagramCtx.lineTo(path.x2 - headLen * Math.cos(angle + Math.PI / 6), path.y2 - headLen * Math.sin(angle + Math.PI / 6));
+                diagramCtx.stroke();
+                break;
+        }
+    }
+}
+
+function clearDiagramCanvas() {
+    if (diagramCtx) {
+        diagramCtx.fillStyle = '#ffffff';
+        diagramCtx.fillRect(0, 0, diagramCanvas.width, diagramCanvas.height);
+    }
+    diagramPaths = [];
+    diagramCurrentSVG = null;
+    document.getElementById('diagram-preview').classList.remove('visible');
+}
+
+function getDiagramSVG() {
+    if (!diagramCanvas || diagramPaths.length === 0) return null;
+    
+    const w = diagramCanvas.width;
+    const h = diagramCanvas.height;
+    
+    let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">`;
+    svg += `<rect width="${w}" height="${h}" fill="white"/>`;
+    
+    for (const path of diagramPaths) {
+        switch (path.tool) {
+            case 'pen':
+                if (path.points.length > 0) {
+                    let d = `M ${path.points[0].x} ${path.points[0].y}`;
+                    for (let i = 1; i < path.points.length; i++) {
+                        d += ` L ${path.points[i].x} ${path.points[i].y}`;
+                    }
+                    svg += `<path d="${d}" stroke="${path.color}" stroke-width="${path.width}" fill="none" stroke-linecap="round"/>`;
+                }
+                break;
+            case 'text':
+                svg += `<text x="${path.x}" y="${path.y}" fill="${path.color}" font-size="${path.size}">${path.text.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</text>`;
+                break;
+            case 'line':
+                svg += `<line x1="${path.x1}" y1="${path.y1}" x2="${path.x2}" y2="${path.y2}" stroke="${path.color}" stroke-width="${path.width}"/>`;
+                break;
+            case 'rect':
+                svg += `<rect x="${Math.min(path.x1,path.x2)}" y="${Math.min(path.y1,path.y2)}" width="${Math.abs(path.x2-path.x1)}" height="${Math.abs(path.y2-path.y1)}" stroke="${path.color}" stroke-width="${path.width}" fill="none"/>`;
+                break;
+            case 'circle':
+                const rx = Math.abs(path.x2 - path.x1) / 2;
+                const ry = Math.abs(path.y2 - path.y1) / 2;
+                svg += `<ellipse cx="${Math.min(path.x1,path.x2)+rx}" cy="${Math.min(path.y1,path.y2)+ry}" rx="${rx}" ry="${ry}" stroke="${path.color}" stroke-width="${path.width}" fill="none"/>`;
+                break;
+            case 'arrow':
+                const a = Math.atan2(path.y2 - path.y1, path.x2 - path.x1);
+                const hl = 12;
+                svg += `<line x1="${path.x1}" y1="${path.y1}" x2="${path.x2}" y2="${path.y2}" stroke="${path.color}" stroke-width="${path.width}"/>`;
+                svg += `<line x1="${path.x2}" y1="${path.y2}" x2="${path.x2-hl*Math.cos(a-Math.PI/6)}" y2="${path.y2-hl*Math.sin(a-Math.PI/6)}" stroke="${path.color}" stroke-width="${path.width}"/>`;
+                svg += `<line x1="${path.x2}" y1="${path.y2}" x2="${path.x2-hl*Math.cos(a+Math.PI/6)}" y2="${path.y2-hl*Math.sin(a+Math.PI/6)}" stroke="${path.color}" stroke-width="${path.width}"/>`;
+                break;
+        }
+    }
+    
+    svg += '</svg>';
+    return svg;
+}
+
+function displayDiagramPreview(svg) {
+    const preview = document.getElementById('diagram-preview');
+    preview.innerHTML = svg;
+    preview.classList.add('visible');
+    diagramCurrentSVG = svg;
+}
+
+async function generateDiagramFromText() {
+    const prompt = document.getElementById('diagram-prompt').value.trim();
+    if (!prompt) {
+        alert('Please describe the diagram');
+        return;
+    }
+    
+    const style = document.getElementById('diagram-style').value;
+    
+    try {
+        const res = await fetch('/api/diagram/generate', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                description: prompt,
+                style: style,
+                diagram_type: 'flowchart'
+            })
+        });
+        
+        const result = await res.json();
+        if (result.success && result.data) {
+            displayDiagramPreview(result.data.svg);
+        } else {
+            alert('Failed: ' + (result.error || 'Unknown error'));
+        }
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+async function refineDiagramSketch() {
+    const prompt = document.getElementById('diagram-prompt').value.trim();
+    if (!prompt) {
+        alert('Please describe the diagram');
+        return;
+    }
+    
+    const sketchSVG = getDiagramSVG();
+    if (!sketchSVG) {
+        alert('Please draw something first');
+        return;
+    }
+    
+    const style = document.getElementById('diagram-style').value;
+    
+    try {
+        const res = await fetch('/api/diagram/refine', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                sketch_svg: sketchSVG,
+                description: prompt,
+                style: style
+            })
+        });
+        
+        const result = await res.json();
+        if (result.success && result.data) {
+            displayDiagramPreview(result.data.refined_svg);
+        } else {
+            alert('Failed: ' + (result.error || 'Unknown error'));
+        }
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+async function exportDiagramSVG() {
+    if (!diagramCurrentSVG) {
+        alert('No diagram to export');
+        return;
+    }
+    
+    const blob = new Blob([diagramCurrentSVG], {type: 'image/svg+xml'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'diagram.svg';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+async function exportDiagramTikZ() {
+    if (!diagramCurrentSVG) {
+        alert('No diagram to export');
+        return;
+    }
+    
+    try {
+        const res = await fetch('/api/diagram/svg-to-tikz', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({svg: diagramCurrentSVG})
+        });
+        
+        const result = await res.json();
+        if (result.success && result.data) {
+            await navigator.clipboard.writeText(result.data.tikz);
+            alert('TikZ code copied to clipboard!');
+        } else {
+            alert('Failed: ' + (result.error || 'Unknown error'));
+        }
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+}
+
+async function insertDiagramToPaper() {
+    if (!diagramCurrentSVG) {
+        alert('No diagram to insert');
+        return;
+    }
+    
+    const fileName = `figure_${Date.now()}.svg`;
+    
+    try {
+        // Save SVG to project
+        const res = await fetch(`/api/files/${projectId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                path: `figures/${fileName}`,
+                content: diagramCurrentSVG
+            })
+        });
+        
+        if (res.ok) {
+            // Insert LaTeX code
+            const latex = `\n\\begin{figure}[htbp]\n\\centering\n\\includesvg[width=0.8\\textwidth]{figures/${fileName.replace('.svg','')}}\n\\caption{Figure caption}\n\\label{fig:${fileName.replace('.svg','')}}\n\\end{figure}\n`;
+            
+            const position = editor.getPosition();
+            editor.executeEdits('', [{
+                range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+                text: latex
+            }]);
+            
+            alert('Diagram inserted! Remember to add \\usepackage{svg} in preamble.');
+            toggleDiagramPanel();
+        }
+    } catch (e) {
+        alert('Error: ' + e.message);
+    }
+}

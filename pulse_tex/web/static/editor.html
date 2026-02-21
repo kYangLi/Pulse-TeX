@@ -27,6 +27,9 @@
                 <button id="btn-literature" class="btn" onclick="toggleLiteraturePanel()">
                     Lit
                 </button>
+                <button id="btn-diagram" class="btn" onclick="toggleDiagramPanel()">
+                    Draw
+                </button>
             </div>
             <div class="header-right">
                 <span id="compile-status"></span>
@@ -98,6 +101,48 @@
             </div>
             <div class="literature-status" id="literature-status"></div>
             <div class="literature-results" id="literature-results"></div>
+        </div>
+        
+        <div class="diagram-panel" id="diagram-panel">
+            <div class="diagram-panel-header">
+                <span>Diagram Workshop</span>
+                <button class="btn-icon" onclick="toggleDiagramPanel()">×</button>
+            </div>
+            <div class="diagram-toolbar">
+                <button class="tool-btn active" data-tool="pen" onclick="setDiagramTool('pen')">✏️</button>
+                <button class="tool-btn" data-tool="line" onclick="setDiagramTool('line')">📏</button>
+                <button class="tool-btn" data-tool="rect" onclick="setDiagramTool('rect')">⬜</button>
+                <button class="tool-btn" data-tool="circle" onclick="setDiagramTool('circle')">⭕</button>
+                <button class="tool-btn" data-tool="arrow" onclick="setDiagramTool('arrow')">➡️</button>
+                <button class="tool-btn" data-tool="text" onclick="setDiagramTool('text')">📝</button>
+                <input type="color" id="diagram-color" value="#333333" title="Color">
+                <select id="diagram-line-width">
+                    <option value="1">Thin</option>
+                    <option value="2" selected>Normal</option>
+                    <option value="4">Thick</option>
+                </select>
+                <button class="btn btn-secondary" onclick="clearDiagramCanvas()">Clear</button>
+            </div>
+            <div class="diagram-canvas-wrapper">
+                <canvas id="diagram-canvas"></canvas>
+            </div>
+            <div class="diagram-actions">
+                <select id="diagram-style">
+                    <option value="nature">Nature Style</option>
+                    <option value="science">Science Style</option>
+                    <option value="ieee">IEEE Style</option>
+                    <option value="minimal">Minimal</option>
+                </select>
+                <input type="text" id="diagram-prompt" placeholder="Describe diagram or modifications...">
+                <button class="btn btn-secondary" onclick="generateDiagramFromText()">Generate</button>
+                <button class="btn btn-primary" onclick="refineDiagramSketch()">Refine</button>
+            </div>
+            <div class="diagram-preview" id="diagram-preview"></div>
+            <div class="diagram-export">
+                <button class="btn btn-secondary" onclick="exportDiagramSVG()">Export SVG</button>
+                <button class="btn btn-secondary" onclick="exportDiagramTikZ()">Export TikZ</button>
+                <button class="btn btn-primary" onclick="insertDiagramToPaper()">Insert to Paper</button>
+            </div>
         </div>
     </div>
     
