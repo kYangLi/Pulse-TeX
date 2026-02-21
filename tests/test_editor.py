@@ -60,8 +60,26 @@ class TestEditorPage:
         assert b"Pulse-TeX Editor" in response.content
 
     def test_static_files(self, client):
-        response = client.get("/css/style.css")
+        response = client.get("/css/main.css")
         assert response.status_code == 200
 
-        response = client.get("/js/app.js")
+        response = client.get("/js/i18n.js")
+        assert response.status_code == 200
+
+        response = client.get("/js/utils.js")
+        assert response.status_code == 200
+
+        response = client.get("/js/api.js")
+        assert response.status_code == 200
+
+        response = client.get("/js/i18n.js")
+        assert response.status_code == 200
+
+        response = client.get("/js/utils.js")
+        assert response.status_code == 200
+
+        response = client.get("/js/api.js")
+        assert response.status_code == 200
+
+        response = client.get("/js/i18n.js")
         assert response.status_code == 200
