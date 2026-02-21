@@ -1382,23 +1382,28 @@
             
             chat.innerHTML += `<div class="ai-message user">${escapeHtml(message)}</div>`;
             input.value = '';
+            chat.scrollTop = chat.scrollHeight;
             
             try {
                 const res = await fetch('/api/ai/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        message,
-                        mode: aiMode,
+                        message: message,
                         context: editor?.getValue() || ''
                     })
                 });
                 const data = await res.json();
-                chat.innerHTML += `<div class="ai-message assistant">${escapeHtml(data.response)}</div>`;
-                chat.scrollTop = chat.scrollHeight;
+                
+                if (data.success && data.content) {
+                    chat.innerHTML += `<div class="ai-message assistant">${escapeHtml(data.content)}</div>`;
+                } else if (data.error) {
+                    chat.innerHTML += `<div class="ai-message error">${escapeHtml(data.error)}</div>`;
+                }
             } catch (e) {
-                chat.innerHTML += `<div class="ai-message error">${e.message}</div>`;
+                chat.innerHTML += `<div class="ai-message error">${escapeHtml(e.message)}</div>`;
             }
+            chat.scrollTop = chat.scrollHeight;
         }
 
         async function searchLiterature() {

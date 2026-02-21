@@ -576,7 +576,7 @@
                 const res = await fetch('/api/config');
                 const config = await res.json();
                 
-                document.getElementById('setting-language').value = config.language || 'en';
+                document.getElementById('setting-language').value = config.ui_language || 'en';
                 document.getElementById('setting-theme').value = config.theme || 'dark';
                 document.getElementById('setting-ai-url').value = config.ai_base_url || '';
                 document.getElementById('setting-ai-key').value = config.ai_api_key || '';
@@ -584,8 +584,8 @@
                 document.getElementById('setting-latex-engine').value = config.latex_engine || 'tectonic';
                 document.getElementById('setting-bibtex-engine').value = config.bibtex_engine || 'biber';
                 
-                if (config.language) {
-                    setLanguage(config.language);
+                if (config.ui_language) {
+                    setLanguage(config.ui_language);
                 }
                 if (config.theme) {
                     setTheme(config.theme);
@@ -597,7 +597,7 @@
 
         async function saveSettings() {
             const config = {
-                language: document.getElementById('setting-language').value,
+                ui_language: document.getElementById('setting-language').value,
                 theme: document.getElementById('setting-theme').value,
                 ai_base_url: document.getElementById('setting-ai-url').value,
                 ai_api_key: document.getElementById('setting-ai-key').value,
@@ -608,12 +608,12 @@
             
             try {
                 await fetch('/api/config', {
-                    method: 'PUT',
+                    method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(config)
                 });
                 
-                setLanguage(config.language);
+                setLanguage(config.ui_language);
                 setTheme(config.theme);
                 closeModal('settings-modal');
             } catch (e) {

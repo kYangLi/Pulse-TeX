@@ -31,6 +31,7 @@ class UpdateConfigRequest(BaseModel):
     ai_base_url: str | None = None
     arxiv_pulse_url: str | None = None
     ui_language: str | None = None
+    theme: str | None = None
     latex_engine: str | None = None
     bibtex_engine: str | None = None
 
@@ -71,6 +72,7 @@ async def get_config():
         "latex_engine": config.get("latex_engine", "tectonic"),
         "bibtex_engine": config.get("bibtex_engine", "biber"),
         "ui_language": config.get("ui_language", "zh"),
+        "theme": config.get("theme", "dark"),
         "is_initialized": db.is_initialized(),
     }
 
