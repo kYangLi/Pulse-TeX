@@ -188,8 +188,6 @@ async function saveCurrentFile() {
     if (!editor || !currentFile) return;
     
     const content = editor.getValue();
-    const btn = document.getElementById('save-btn');
-    if (btn) btn.disabled = true;
     updateSaveStatus('saving');
     
     try {
@@ -211,8 +209,6 @@ async function saveCurrentFile() {
     } catch (e) {
         console.error('Failed to save file:', e);
         updateSaveStatus('error');
-    } finally {
-        if (btn) btn.disabled = false;
     }
 }
 
